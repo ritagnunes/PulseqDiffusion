@@ -38,10 +38,12 @@ def get_dirs(ndirs):
                      [0.729809,    0.673235,  -0.118882],
                      [0.698325,   -0.455759,   0.551929],
                      [-0.325340,   0.489774,   0.808873]])
-    else: 
-        g=np.array([1, 0, 0])
+    else:
+        g = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     return g
 
-def calc_bval(G, delta, Delta, gdiff_risetime):
-    bval= (2*math.pi*G)**2*(delta**2*(Delta-delta/3)+(gdiff_risetime)^3/30-delta*(gdiff_risetime)^2/6)
+def calc_bval(G, delta, Delta):
+    bval= (2*math.pi*G*delta)**2*(Delta-delta/3)
+    a=(Delta-delta/3)#+((gdiff_risetime)**3)/30-delta*((gdiff_risetime)**2)/6)
+
     return bval

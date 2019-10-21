@@ -23,12 +23,12 @@ fov = 240e-3
 Nx = 96
 Ny = 96
 slice_thickness = 2.5e-3
-n_slices = 40
+n_slices = 10
 
 # Partial Fourier
 pF = 0.75
 Nyeff = int (pF*Ny)
-te=90e-3
+te=84e-3
 tr=12
 
 pe_enable = 1
@@ -119,6 +119,9 @@ delay_te2 = math.ceil((delay_te2 - gdiff_dur)/seq.grad_raster_time)*seq.grad_ras
 gdiff_dur = calc_duration(gdiff)
 
 print(gdiff_dur),print(gdiff_dur + + 2*calc_duration(gz_spoil) + calc_duration(rf180))
+bv=difunc.calc_bval(system.max_grad,gdiff_dur,gdiff_dur + + 2*calc_duration(gz_spoil) + calc_duration(rf180))
+bv_smm_2=bv*1e-6
+print(bv_smm_2)
 
 gx_crush = make_trapezoid(channel='x', area=2 * Nx * delta_k, system=system)
 gz_crush = make_trapezoid(channel='z', area=4 / slice_thickness, system=system)

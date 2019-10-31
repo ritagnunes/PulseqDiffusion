@@ -19,30 +19,34 @@ from pypulseq.opts import Opts
 from pypulseq.split_gradient_at import split_gradient_at
 
 seq = Sequence()
+seqfname = 'nondwepi_1slice.seq'
 fov = 240e-3
 Nx = 96
 Ny = 96
 slice_thickness = 2.5e-3
-n_slices = 10
+n_slices = 1
 
 # Partial Fourier
 pF = 0.75
 Nyeff = int (pF*Ny)
 te=84e-3
-tr=12
+tr=1
 
 pe_enable = 1
 
-nbvals=1
-ndirs=12
+nbvals=0
+ndirs=1
 #gradient scaling
 gscl=np.sqrt(np.linspace(0., 1., nbvals+1))
-gdir = difunc.get_dirs(ndirs)
+gdir, nb0s = difunc.get_dirs(ndirs)
+
+#to avoid exceeding gradient limits
+gdfact = 1.0
 
 tr_per_slice = tr / n_slices
 
 system = Opts(max_grad=32, grad_unit='mT/m', max_slew=130, slew_unit='T/m/s', rf_ringdown_time=30e-6,
-              rf_dead_time=100e-6)
+              rf_dead_time=100e-6, adc_dead_time=20e-6)
 
 b0 = 2.89
 sat_ppm = -3.45
@@ -54,7 +58,7 @@ gz_fs = make_trapezoid(channel='z', system=system, delay=calc_duration(rf_fs), a
 rf, gz, gz_reph = make_sinc_pulse(flip_angle=math.pi / 2, system=system, duration=3e-3, slice_thickness=slice_thickness,
                                   apodization=0.5, time_bw_product=4)
 
-rf180, gz180, _ =  make_sinc_pulse(flip_angle=math.pi, system=system, duration=3e-3, slice_thickness=slice_thickness,
+rf180, gz180, _ =  make_sinc_pulse(flip_angle=math.pi, system=system, duration=5e-3, slice_thickness=slice_thickness,
                             apodization=0.5, time_bw_product=4)
 rf180.phase_offset = math.pi/2
 
@@ -64,7 +68,7 @@ delta_k = 1 / fov
 k_width = Nx * delta_k
 readout_time = 5e-4
 
-blip_dur = math.ceil(2 * math.sqrt(delta_k / system.max_slew) / 10e-6 / 2) * 10e-6 * 2
+blip_dur = math.ceil(2 * math.sqrt(delta_k / system.max_slew) / seq.grad_raster_time / 2) * seq.grad_raster_time * 2
 gy = make_trapezoid(channel='y', system=system, area=delta_k, duration=blip_dur)
 
 extra_area = blip_dur / 2 * blip_dur / 2 * system.max_slew
@@ -76,12 +80,12 @@ gx.flat_area = gx.amplitude * gx.flat_time
 
 adc_dwell_nyquist = delta_k / gx.amplitude
 adc_dwell = math.floor(adc_dwell_nyquist * 1e7) * 1e-7
-adc_samples = math.floor(readout_time / adc_dwell / 4) * 4
+adc_samples = math.floor(readout_time / system.adc_dead_time)
 
 adc = make_adc(num_samples=adc_samples, dwell=adc_dwell, delay=blip_dur / 2)
 
-time_to_center = adc.dwell * (adc_samples - 1) / 2
-adc.delay = round((gx.rise_time + gx.flat_time / 2 - time_to_center) * 1e6) * 1e-6
+time_to_center = system.adc_dead_time * (adc_samples - 1) / 2
+adc.delay = round((gx.rise_time + gx.flat_time / 2 - time_to_center) / seq.grad_raster_time) * seq.grad_raster_time
 
 gy_parts = split_gradient_at(grad=gy, time_point=blip_dur / 2, system=system)
 gy_blipup, gy_blipdown, _ = align('right', gy_parts[0], 'left', gy_parts[1], gx)
@@ -111,7 +115,8 @@ gdiff_dur = min(delay_te1,delay_te2)
 
 rt= math.ceil(system.max_grad/system.max_slew/seq.grad_raster_time)*seq.grad_raster_time
 
-gdiff = make_trapezoid(channel='x', system=system, amplitude=system.max_grad, area=(gdiff_dur-rt)*system.max_grad)
+#gdiff = make_trapezoid(channel='x', system=system, amplitude=system.max_grad, area=(gdiff_dur-rt)*system.max_grad)
+gdiff = make_trapezoid(channel='x', system=system, amplitude=gdfact*system.max_grad, duration=gdiff_dur)
 
 delay_te1 = math.ceil((delay_te1 - gdiff_dur)/seq.grad_raster_time)*seq.grad_raster_time
 delay_te2 = math.ceil((delay_te2 - gdiff_dur)/seq.grad_raster_time)*seq.grad_raster_time
@@ -119,7 +124,7 @@ delay_te2 = math.ceil((delay_te2 - gdiff_dur)/seq.grad_raster_time)*seq.grad_ras
 gdiff_dur = calc_duration(gdiff)
 
 print(gdiff_dur),print(gdiff_dur + + 2*calc_duration(gz_spoil) + calc_duration(rf180))
-bv=difunc.calc_bval(system.max_grad,gdiff_dur,gdiff_dur + + 2*calc_duration(gz_spoil) + calc_duration(rf180))
+bv=difunc.calc_bval(gdfact*system.max_grad,gdiff_dur,gdiff_dur + 2*calc_duration(gz_spoil) + calc_duration(rf180))
 bv_smm_2=bv*1e-6
 print(bv_smm_2)
 
@@ -127,12 +132,12 @@ gx_crush = make_trapezoid(channel='x', area=2 * Nx * delta_k, system=system)
 gz_crush = make_trapezoid(channel='z', area=4 / slice_thickness, system=system)
 
 min_tr = n_slices*round((calc_duration(rf_fs) + calc_duration(gz_fs) + calc_duration(rf) + calc_duration(gz_reph) + 2*calc_duration(gz_spoil) + calc_duration(rf180) + calc_duration(gx_pre,gy_pre)
-        + calc_duration(gx)*Ny*pF + calc_duration(gx_crush,gz_crush))*1e6)*1e-6
+        + calc_duration(gx)*Ny*pF + calc_duration(gx_crush,gz_crush))/seq.grad_raster_time)*seq.grad_raster_time
 
 assert np.all(tr >= min_tr)
 
 tr_delay = round((tr_per_slice - (calc_duration(rf_fs) + calc_duration(gz_fs) + calc_duration(rf) + calc_duration(gz_reph) + 2*calc_duration(gz_spoil) + calc_duration(rf180) + calc_duration(gx_pre,gy_pre)
-        + calc_duration(gx)*Ny*pF + calc_duration(gx_crush,gz_crush)))* 1e6) * 1e-6
+        + calc_duration(gx)*Ny*pF + calc_duration(gx_crush,gz_crush)))/seq.grad_raster_time) * seq.grad_raster_time
 
 
 #EPI calibration
@@ -165,38 +170,39 @@ for s in range(n_slices):
         seq.add_block(make_delay(tr_delay))
 
 #b-zero acquisition
-for s in range(n_slices):
-    print(s - (n_slices - 1) / 2)
-    seq.add_block(rf_fs, gz_fs)
-    rf.freq_offset = gz.amplitude * slice_thickness * (s - (n_slices - 1) / 2)
-    seq.add_block(rf, gz)
-    seq.add_block(gz_reph)
+for d in range(nb0s):
+    for s in range(n_slices):
+        print(s - (n_slices - 1) / 2)
+        seq.add_block(rf_fs, gz_fs)
+        rf.freq_offset = gz.amplitude * slice_thickness * (s - (n_slices - 1) / 2)
+        seq.add_block(rf, gz)
+        seq.add_block(gz_reph)
 
-    seq.add_block(make_delay(gdiff_dur + delay_te1))
+        seq.add_block(make_delay(gdiff_dur + delay_te1))
 
-    seq.add_block(gz_spoil)
-    seq.add_block(rf180, gz180)
-    seq.add_block(gz_spoil)
+        seq.add_block(gz_spoil)
+        seq.add_block(rf180, gz180)
+        seq.add_block(gz_spoil)
 
-    seq.add_block(make_delay(gdiff_dur))
+        seq.add_block(make_delay(gdiff_dur))
 
-    seq.add_block(make_delay(delay_te2 + gdiff_dur))
+        seq.add_block(make_delay(delay_te2 + gdiff_dur))
 
-    seq.add_block(gx_pre,gy_pre)
+        seq.add_block(gx_pre,gy_pre)
 
-    for i in range(1, Nyeff + 1):
-        if i == 1:
-            seq.add_block(gx, gy_blipup, adc)
-        elif i == Nyeff:
-            seq.add_block(gx, gy_blipdown, adc)
-        else:
-            seq.add_block(gx, gy_blipdownup, adc)
-        gx.amplitude = -gx.amplitude
+        for i in range(1, Nyeff + 1):
+            if i == 1:
+                seq.add_block(gx, gy_blipup, adc)
+            elif i == Nyeff:
+                seq.add_block(gx, gy_blipdown, adc)
+            else:
+                seq.add_block(gx, gy_blipdownup, adc)
+            gx.amplitude = -gx.amplitude
 
-    seq.add_block(gx_crush, gz_crush)
+        seq.add_block(gx_crush, gz_crush)
 
-    if tr_delay > 0:
-        seq.add_block(make_delay(tr_delay))
+        if tr_delay > 0:
+            seq.add_block(make_delay(tr_delay))
 
 #dwi acquisitions
 for bv in range(1,nbvals+1):
@@ -212,12 +218,12 @@ for bv in range(1,nbvals+1):
 
             rt = math.ceil(system.max_grad * gscl[bv] * gdir[d, 0] / system.max_slew / seq.grad_raster_time) * seq.grad_raster_time
             ft = gdiff_dur - rt
-            gdiffx = make_trapezoid(channel='x', system=system, amplitude=system.max_grad * gscl[bv] * gdir[d, 0],
-                                    area=(gdiff_dur - rt) * system.max_grad * gscl[bv] * gdir[d, 0], flat_time=ft)
-            gdiffy = make_trapezoid(channel='y', system=system, amplitude=system.max_grad * gscl[bv] * gdir[d, 1],
-                                    area=(gdiff_dur - rt) * system.max_grad * gscl[bv] * gdir[d, 1], flat_time=ft)
-            gdiffz = make_trapezoid(channel='z', system=system, amplitude=system.max_grad * gscl[bv] * gdir[d, 2],
-                                    area=(gdiff_dur - rt) * system.max_grad * gscl[bv] * gdir[d, 2], flat_time=ft)
+            gdiffx = make_trapezoid(channel='x', system=system, amplitude=gdfact*system.max_grad * gscl[bv] * gdir[d, 0],duration=gdiff_dur)
+                                   # area=(gdiff_dur - rt) * system.max_grad * gscl[bv] * gdir[d, 0], flat_time=ft)
+            gdiffy = make_trapezoid(channel='y', system=system, amplitude=gdfact*system.max_grad * gscl[bv] * gdir[d, 1],duration=gdiff_dur)
+                                   # area=(gdiff_dur - rt) * system.max_grad * gscl[bv] * gdir[d, 1], flat_time=ft)
+            gdiffz = make_trapezoid(channel='z', system=system, amplitude=gdfact*system.max_grad * gscl[bv] * gdir[d, 2],duration=gdiff_dur)
+                                    #area=(gdiff_dur - rt) * system.max_grad * gscl[bv] * gdir[d, 2], flat_time=ft)
 
             seq.add_block(gdiffx, gdiffy, gdiffz)
 
@@ -259,18 +265,18 @@ else:
 
 seq.plot()
 
-ktraj_adc, ktraj, t_excitation, t_refocusing, t_adc = seq.calculate_kspace()
+#ktraj_adc, ktraj, t_excitation, t_refocusing, t_adc = seq.calculate_kspace()
 
-time_axis = np.arange(1, ktraj.shape[1] + 1) * system.grad_raster_time
-plt.plot(time_axis, ktraj.T)
-plt.plot(t_adc, ktraj_adc[0], '.')
-plt.figure()
-plt.plot(ktraj_adc[0], ktraj_adc[1], 'b')
-plt.axis('equal')
-plt.plot(ktraj_adc[0], ktraj_adc[1], 'r.')
-plt.show()
+#time_axis = np.arange(1, ktraj.shape[1] + 1) * system.grad_raster_time
+#plt.plot(time_axis, ktraj.T)
+#plt.plot(t_adc, ktraj_adc[0], '.')
+#plt.figure()
+#plt.plot(ktraj_adc[0], ktraj_adc[1], 'b')
+#plt.axis('equal')
+#plt.plot(ktraj_adc[0], ktraj_adc[1], 'r.')
+#plt.show()
 
 seq.set_definition('FOV', np.array([fov, fov, slice_thickness]) * 1e3)
 seq.set_definition('Name', 'dw_epi')
 
-seq.write('dwepi_rs_pypulseq.seq')
+seq.write(seqfname)

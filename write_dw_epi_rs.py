@@ -66,7 +66,7 @@ gz_spoil = make_trapezoid(channel='z', system=system, area=2*gz.area, duration=3
 
 delta_k = 1 / fov
 k_width = Nx * delta_k
-readout_time = 5e-4
+readout_time = 1.05e-3
 
 blip_dur = math.ceil(2 * math.sqrt(delta_k / system.max_slew) / seq.grad_raster_time / 2) * seq.grad_raster_time * 2
 gy = make_trapezoid(channel='y', system=system, area=delta_k, duration=blip_dur)
@@ -80,7 +80,13 @@ gx.flat_area = gx.amplitude * gx.flat_time
 
 adc_dwell_nyquist = delta_k / gx.amplitude
 adc_dwell = math.floor(adc_dwell_nyquist * 1e7) * 1e-7
-adc_samples = math.floor(readout_time / system.adc_dead_time)
+#both adc_dwell and grad_time must fall on the same grid
+adc_dwell = math.floor(adc_dwell / seq.grad_raster_time)*seq.grad_raster_time
+#making sure the number of samples is even
+adc_samples = math.floor(readout_time / adc_dwell / 4) * 4
+
+if adc_samples == 0:
+    print('error! The readout time needs to be longer!')
 
 adc = make_adc(num_samples=adc_samples, dwell=adc_dwell, delay=blip_dur / 2)
 
@@ -96,26 +102,23 @@ gy_blipdown.waveform = gy_blipdown.waveform * pe_enable
 gy_blipdownup.waveform = gy_blipdownup.waveform * pe_enable
 
 gx_pre = make_trapezoid(channel='x', system=system, area=-gx.area / 2)
-gy_pre = make_trapezoid(channel='y', system=system, area=-pF*Ny / 2 * delta_k)
+gy_pre = make_trapezoid(channel='y', system=system, area= -(1-pF)*Ny * delta_k)
 
 gy_pre = make_trapezoid(channel='y', system=system, area=gy_pre.area, duration=calc_duration(gx_pre, gy_pre))
 gy_pre.amplitude = gy_pre.amplitude * pe_enable
 
-duration_center = (calc_duration(gx))*Ny*(1-pF)
+dur2center = (calc_duration(gx))*Ny*(1-pF)
 
 delay_te1 = math.ceil((te/2 - calc_duration(gz)/2 - + calc_duration(gz_reph) - calc_duration(gz_spoil) - calc_duration(rf180)/2)/seq.grad_raster_time)*seq.grad_raster_time
-delay_te2 = math.ceil((te/2 - calc_duration(rf180)/2 - calc_duration(gz_spoil) - calc_duration(gx_pre,gy_pre) - duration_center)/seq.grad_raster_time)*seq.grad_raster_time
+delay_te2 = math.ceil((te/2 - calc_duration(rf180)/2 - calc_duration(gz_spoil) - calc_duration(gx_pre,gy_pre) - dur2center)/seq.grad_raster_time)*seq.grad_raster_time
 
-min_te = math.ceil(2*max(calc_duration(gz)/2 + calc_duration(gz_reph) + calc_duration(gz_spoil) + calc_duration(rf180)/2, calc_duration(rf180)/2 + calc_duration(gz_spoil) + calc_duration(gx_pre,gy_pre) + duration_center)/ seq.grad_raster_time) * seq.grad_raster_time
+min_te = math.ceil(2*max(calc_duration(gz)/2 + calc_duration(gz_reph) + calc_duration(gz_spoil) + calc_duration(rf180)/2, calc_duration(rf180)/2 + calc_duration(gz_spoil) + calc_duration(gx_pre,gy_pre) + dur2center)/ seq.grad_raster_time) * seq.grad_raster_time
 
 assert np.all(te >= min_te)
 
 #adding diffusion-weighting - based on TE for now
 gdiff_dur = min(delay_te1,delay_te2)
 
-rt= math.ceil(system.max_grad/system.max_slew/seq.grad_raster_time)*seq.grad_raster_time
-
-#gdiff = make_trapezoid(channel='x', system=system, amplitude=system.max_grad, area=(gdiff_dur-rt)*system.max_grad)
 gdiff = make_trapezoid(channel='x', system=system, amplitude=gdfact*system.max_grad, duration=gdiff_dur)
 
 delay_te1 = math.ceil((delay_te1 - gdiff_dur)/seq.grad_raster_time)*seq.grad_raster_time
@@ -123,7 +126,7 @@ delay_te2 = math.ceil((delay_te2 - gdiff_dur)/seq.grad_raster_time)*seq.grad_ras
 
 gdiff_dur = calc_duration(gdiff)
 
-print(gdiff_dur),print(gdiff_dur + + 2*calc_duration(gz_spoil) + calc_duration(rf180))
+print(gdiff_dur),print(gdiff_dur +  2*calc_duration(gz_spoil) + calc_duration(rf180))
 bv=difunc.calc_bval(gdfact*system.max_grad,gdiff_dur,gdiff_dur + 2*calc_duration(gz_spoil) + calc_duration(rf180))
 bv_smm_2=bv*1e-6
 print(bv_smm_2)

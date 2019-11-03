@@ -16,22 +16,23 @@ from pypulseq.make_delay import make_delay
 import matplotlib.pyplot as plt
 
 seq = Sequence()
-seqfname = 'dwepi_1slice_1bval_3dirs.seq'
+seqfname = 'dwepi_3slices_2bval_3dirs.seq'
 fov = 240e-3
 Nx = 96
 Ny = 96
 slice_thickness = 2.5e-3
-n_slices = 1
+n_slices = 3
 
 # Partial Fourier
 pF = 0.75
 Nyeff = int (pF*Ny)
-te=84e-3
-tr=12
+te=112e-3
+tr=5
 
+fatsat_enable=1
 pe_enable = 1
 
-nbvals=1
+nbvals=2
 ndirs=3
 #gradient scaling
 gscl=np.sqrt(np.linspace(0., 1., nbvals+1))
@@ -42,12 +43,13 @@ tr_per_slice = tr / n_slices
 system = Opts(max_grad=32, grad_unit='mT/m', max_slew=130, slew_unit='T/m/s', rf_ringdown_time=30e-6,
               rf_dead_time=100e-6)
 
-b0 = 2.89
-sat_ppm = -3.45
-sat_freq = sat_ppm * 1e-6 * b0 * system.gamma
-rf_fs, _, _ = make_gauss_pulse(flip_angle=110 * math.pi / 180, system=system, duration=8e-3, bandwidth=abs(sat_freq),
+if fatsat_enable:
+    b0 = 2.89
+    sat_ppm = -3.45
+    sat_freq = sat_ppm * 1e-6 * b0 * system.gamma
+    rf_fs, _, _ = make_gauss_pulse(flip_angle=110 * math.pi / 180, system=system, duration=8e-3, bandwidth=abs(sat_freq),
                                freq_offset=sat_freq)
-gz_fs = make_trapezoid(channel='z', system=system, delay=calc_duration(rf_fs), area=1 / 1e-4)
+    gz_fs = make_trapezoid(channel='z', system=system, delay=calc_duration(rf_fs), area=1 / 1e-4)
 
 rf, gz, _ = make_sinc_pulse(flip_angle=math.pi / 2, system=system, duration=3e-3, slice_thickness=slice_thickness,
                                   apodization=0.5, time_bw_product=4)
@@ -56,7 +58,7 @@ rf180, gz180, _ =  make_sinc_pulse(flip_angle=math.pi, system=system, duration=5
                             apodization=0.5, time_bw_product=4)
 rf180.phase_offset = math.pi/2
 
-gz_spoil = make_trapezoid(channel='z', system=system, area=2*gz.area, duration=3e-3)
+gz_spoil = make_trapezoid(channel='z', system=system, area=6/slice_thickness, duration=3e-3)
 
 delta_k = 1 / fov
 k_width = Nx * delta_k
@@ -103,18 +105,29 @@ print(bv_smm_2)
 gx_crush = make_trapezoid(channel='x', area=2 * Nx * delta_k, system=system)
 gz_crush = make_trapezoid(channel='z', area=4 / slice_thickness, system=system)
 
-min_tr = n_slices*round((calc_duration(gz_fs)  + calc_duration(gz) + calc_duration(gz_reph) + delay_te1 + 2*gdiff_dur + 2*calc_duration(gz_spoil) + calc_duration(gz180) + delay_te2 + calc_duration(gx_pre,gy_pre)
+if fatsat_enable:
+    min_tr = n_slices*round((calc_duration(gz_fs)  + calc_duration(gz) + calc_duration(gz_reph) + delay_te1 + 2*gdiff_dur + 2*calc_duration(gz_spoil) + calc_duration(gz180) + delay_te2 + calc_duration(gx_pre,gy_pre)
         + calc_duration(gx)*Nyeff + calc_duration(gx_crush,gz_crush))/seq.grad_raster_time)*seq.grad_raster_time
 
-assert np.all(tr >= min_tr)
+    assert np.all(tr >= min_tr)
 
-tr_delay = math.ceil((tr_per_slice - (calc_duration(gz_fs) + calc_duration(gz) + calc_duration(gz_reph) + delay_te1 + 2*calc_duration(gz_spoil) + calc_duration(gz180) + delay_te2 + 2*gdiff_dur + calc_duration(gx_pre,gy_pre)
+    tr_delay = math.ceil((tr_per_slice - (calc_duration(gz_fs) + calc_duration(gz) + calc_duration(gz_reph) + delay_te1 + 2*calc_duration(gz_spoil) + calc_duration(gz180) + delay_te2 + 2*gdiff_dur + calc_duration(gx_pre,gy_pre)
         + calc_duration(gx)*Nyeff + calc_duration(gx_crush,gz_crush)))/seq.grad_raster_time) * seq.grad_raster_time
+else:
+    min_tr = n_slices * round(( calc_duration(gz) + calc_duration(gz_reph) + delay_te1 + 2 * gdiff_dur + 2 * calc_duration(gz_spoil) + calc_duration(gz180) + delay_te2 + calc_duration(gx_pre, gy_pre)
+                               + calc_duration(gx) * Nyeff + calc_duration(gx_crush, gz_crush)) / seq.grad_raster_time) * seq.grad_raster_time
+
+    assert np.all(tr >= min_tr)
+
+    tr_delay = math.ceil((tr_per_slice - (calc_duration(gz) + calc_duration(gz_reph) + delay_te1 + 2 * calc_duration(gz_spoil) + calc_duration(gz180) + delay_te2 + 2 * gdiff_dur + calc_duration(gx_pre, gy_pre)
+                + calc_duration(gx) * Nyeff + calc_duration(gx_crush, gz_crush))) / seq.grad_raster_time) * seq.grad_raster_time
+
 
 #EPI calibration
 for s in range(n_slices):
     print(s - (n_slices - 1) / 2)
-    seq.add_block(rf_fs, gz_fs)
+    if fatsat_enable:
+        seq.add_block(rf_fs, gz_fs)
     rf.freq_offset = gz.amplitude * slice_thickness * (s - (n_slices - 1) / 2)
     seq.add_block(rf, gz)
     seq.add_block(gz_reph)
@@ -143,7 +156,8 @@ for s in range(n_slices):
 for d in range(nb0s):
     for s in range(n_slices):
         print(s - (n_slices - 1) / 2)
-        seq.add_block(rf_fs, gz_fs)
+        if fatsat_enable:
+            seq.add_block(rf_fs, gz_fs)
         rf.freq_offset = gz.amplitude * slice_thickness * (s - (n_slices - 1) / 2)
         seq.add_block(rf, gz)
         seq.add_block(gz_reph)
@@ -172,19 +186,19 @@ for d in range(nb0s):
 for bv in range(1,nbvals+1):
     for d in range(ndirs):
         for s in range(n_slices):
-            seq.add_block(rf_fs, gz_fs)
+            if fatsat_enable:
+                seq.add_block(rf_fs, gz_fs)
             rf.freq_offset = gz.amplitude * slice_thickness * (s - (n_slices - 1) / 2)
             seq.add_block(rf, gz)
             seq.add_block(gz_reph)
-
-            if delay_te1 > 0:
-                seq.add_block(make_delay(delay_te1))
 
             gdiffx = make_trapezoid(channel='x', system=system, amplitude=system.max_grad * gscl[bv] * gdir[d, 0],duration=gdiff_dur)
             gdiffy = make_trapezoid(channel='y', system=system, amplitude=system.max_grad * gscl[bv] * gdir[d, 1],duration=gdiff_dur)
             gdiffz = make_trapezoid(channel='z', system=system, amplitude=system.max_grad * gscl[bv] * gdir[d, 2],duration=gdiff_dur)
 
             seq.add_block(gdiffx, gdiffy, gdiffz)
+            if delay_te1 > 0:
+                seq.add_block(make_delay(delay_te1))
 
             seq.add_block(gz_spoil)
             seq.add_block(rf180, gz180)
@@ -207,7 +221,7 @@ for bv in range(1,nbvals+1):
             if tr_delay > 0:
                 seq.add_block(make_delay(tr_delay))
 
-#seq.plot()
+seq.plot()
 
 #ktraj_adc, ktraj, t_excitation, t_refocusing, t_adc = seq.calculate_kspace()
 

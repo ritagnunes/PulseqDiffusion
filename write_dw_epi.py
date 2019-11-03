@@ -16,7 +16,7 @@ from pypulseq.make_delay import make_delay
 import matplotlib.pyplot as plt
 
 seq = Sequence()
-seqfname = 'dwepi_3slices_2bval_3dirs.seq'
+seqfname = 'dwepi_3slices_2bval_3dirsnofs_New.seq'
 fov = 240e-3
 Nx = 96
 Ny = 96
@@ -29,7 +29,7 @@ Nyeff = int (pF*Ny)
 te=112e-3
 tr=5
 
-fatsat_enable=1
+fatsat_enable=0
 pe_enable = 1
 
 nbvals=2
@@ -135,6 +135,7 @@ for s in range(n_slices):
     seq.add_block(make_delay(gdiff_dur + delay_te1))
 
     seq.add_block(gz_spoil)
+    rf180.freq_offset = gz180.amplitude * slice_thickness * (s - (n_slices - 1) / 2)
     seq.add_block(rf180, gz180)
     seq.add_block(gz_spoil)
 
@@ -165,6 +166,7 @@ for d in range(nb0s):
         seq.add_block(make_delay(gdiff_dur + delay_te1))
 
         seq.add_block(gz_spoil)
+        rf180.freq_offset = gz180.amplitude * slice_thickness * (s - (n_slices - 1) / 2)
         seq.add_block(rf180, gz180)
         seq.add_block(gz_spoil)
 
@@ -201,6 +203,7 @@ for bv in range(1,nbvals+1):
                 seq.add_block(make_delay(delay_te1))
 
             seq.add_block(gz_spoil)
+            rf180.freq_offset = gz180.amplitude * slice_thickness * (s - (n_slices - 1) / 2)
             seq.add_block(rf180, gz180)
             seq.add_block(gz_spoil)
 

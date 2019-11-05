@@ -110,8 +110,7 @@ def get_dirs(ndirs):
         nb0s= 1
     return g, nb0s
 
-def calc_bval(G, delta, Delta):
-    bval= (2*math.pi*G*delta)**2*(Delta-delta/3)
-    a=(Delta-delta/3)#+((gdiff_risetime)**3)/30-delta*((gdiff_risetime)**2)/6)
+def calc_bval(G, delta, Delta,gdiff_rt):
+    bval= (2*math.pi*G)**2*((Delta-delta/3)*(delta**2)+(gdiff_rt**3)/30-delta*(gdiff_rt**2)/6)
 
     return bval

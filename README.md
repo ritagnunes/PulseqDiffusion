@@ -8,7 +8,7 @@ Diffusion-weighted Imaging (DWI) is an important sequence for many clinical appl
 
 We propose the development of a tool `PulseqDiffusion` cross-vendor, open-source package of a multi-slice single-shot spin echo-planar imaging-based diffusion pulse sequence using `PyPulseq`[[2]](#references) - [[4]](#references), which can be extended to support multiple b values and directions. We demonstrate this on (i) in vitro phantom to measure the Apparent Diffusion Coefficient values  (ii) in vivo human brain data to obtained good quality Fractional Anisotropy (FA) and Mean Diffusivity maps. The data can be processed utilizing the freely available post-processing tools and generate quantitative diffusion maps.
 
-A SNR and CNR tool can be found in jMRI_Publication_Functions for predict the noise impact per tissue per time unit for a spoiled gradient echo sequence according to a set of parameters [[5]](#references). This focus on EPI and Spiral sequences and, allows to understand the impact of: B0, max gradient, resolution and b-value in the noise (comparing it with typical SNR for a clinical scan at 1.5T).
+A SNR and CNR tool can be found in `jMRI_Publication_Functions` for predict the noise impact per tissue per time unit for a spoiled gradient echo sequence according to a set of parameters [[5]](#references). This focus on EPI and Spiral sequences and, allows to understand the impact of: B0, max gradient, resolution and b-value in the noise (comparing it with typical SNR for a clinical scan at 1.5T).
 
 ---
 ## [Citations][scholar-citations]

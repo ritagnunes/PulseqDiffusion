@@ -2,13 +2,15 @@ function ADC=estimate_adc(img, mask, dimpars, bmax)
 %ADC=estimate_adc(img, mask, dimpars, bmax)
 % estimates one ADC map per input direction
 % img - input image (minimum 1 non-zero b-value, 1 direction)
-% mask - defines where to estimate the ADC maps
+% mask - defines where to estimate the ADC maps 
+%        mask should have the same dimensions as img
 % dimpars: structure containg data dimensions
 % dimpars.Nb0s - number of non-DWI volumes
 % dimpars.Nb - number of non-zero b-values
 % dimpars.Ndir - number of sampled gradient directions
 % dimpars.Nsl - number of slices
 % bmax - maximum non-zero b-value in s/mm2 (optional - default 1000 s/mm2)
+% when dimpars.Nb > 1, a linear spacing is assumed for the sampled b-values
 
 if nargin<4 
     bmax=1000;

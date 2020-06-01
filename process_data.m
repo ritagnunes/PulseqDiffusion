@@ -1,17 +1,20 @@
 %Script for reconstructing the images, pre-process them 
 %and estimate Diffusion Tensor or simple ADC maps
 
-kname='kPhantom3dirs5b3slices.mat';
-img_name='DWI_Pht5b3dirs';
+%file name for the input k-space data
+kname='Example_Data/kInVivo12dirs1b20slices';
+
+%name for the output reconstructed image
+img_name='DWI_InVivo12dirs1b20slices';
 
 % In-vivo or phantom?
-invivo=0;
+invivo=1;
 
 %diffusion acquisition parameters
-Nb=5;%excluding non-DWI
+Nb=1;%excluding non-DWI
 bmax=1000;
-Ndir=3;
-Nsl=3;
+Ndir=12;
+Nsl=20;
 
 %Partial Fourier factor and image spatial resolution
 PFourier=0.75;
@@ -21,7 +24,7 @@ Resy=2.5;
 Resz=2.5;%
 
 % model 'dti' or 'adc'
-model = 'adc'
+model = 'dti'
 
 %include eddy current and motion correction pre-processing
 eddy=0;
@@ -97,6 +100,6 @@ switch lower(model)
         disp('model should be equal to either dti or adc')
 end
 
-
+disp('Done!')
 
 

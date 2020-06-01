@@ -12,13 +12,13 @@ function im_sos = recon_imgs(k, dimpars ,gc)
 % dimpars.PFourier - partial Fourier factor
 %
 %multi-slice 2D data containing multiple volumes
-% assuming input k-space size is N x Nc x Nimgs
+% assuming input k-space size is N x Nc x Nimg.N
 % N - matrix size (assuming square field-of-view)
 % Nc - number of coil channels
 % where N and Nc are estimated from the data and
-% Nvol - number of volumes (1 + Nb0 + Nb*Ǹdir)
-% extra volume correponds to calibration data for EPI ghost-correction
-% Nimg - number of imgs = (Nvol-1) * Nsl
+% Nvol - number of volumes (1 + Nb0s + Nb*Ǹdir)
+% the extra volume correponds to calibration data for EPI ghost-correction
+% Nimg - number of imgs + calibration data = Nvol * Nsl
 %
 %gc: flag for ghost correction - On by default
 N = size(k,1);

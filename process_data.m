@@ -10,14 +10,27 @@ img_name='DWI_InVivo12dirs1b20slices';
 % In-vivo or phantom?
 invivo=1;
 
-%diffusion acquisition parameters
-Nb=1;%excluding non-DWI
-bmax=1000;
-Ndir=12;
-Nsl=20;
+%load data
+load(kname);
 
-%Partial Fourier factor and image spatial resolution
-PFourier=0.75;
+%to be modified unless dim_struct is
+%provided in example data
+if ~exist('dim_struct','var')
+    %diffusion acquisition parameters
+    Nb=1;%excluding non-DWI
+    bmax=1000;
+    Ndir=12;
+    Nsl=20;   
+
+    %Partial Fourier factor 
+    PFourier=0.75;
+else
+    bmax=dim_struct.bmax;
+    Ndir=dim_struct.Ndir;
+    Nb=dim_struct.Nb;    
+end
+
+%Image spatial resolution
 Resx=2.5;
 Resy=2.5;
 %slice thickness including gaps if they exist
@@ -39,13 +52,13 @@ fsl_flag=1;
 addpath('nifti_tools')
 setenv('FSLOUTPUTTYPE','NIFTI')
 
-load(kname);
-
 [bvals, bvecs, Nb0s] = generate_bvalsbvecs(bmax,Ndir,Nb,fsl_flag);
 save('bvals','bvals','-ASCII')
 save('bvecs','bvecs','-ASCII')
 
-dim_struct=struct('Nb',Nb,'Ndir',Ndir,'Nb0s',Nb0s,'Nsl',Nsl,'PFourier',PFourier);
+if ~exist('dim_struct','var')
+    dim_struct=struct('Nb',Nb,'Ndir',Ndir,'Nb0s',Nb0s,'Nsl',Nsl,'PFourier',PFourier);
+end
 %recon sum-of-squares image including ghost correction
 im_sos = recon_imgs(k, dim_struct, 1);
 

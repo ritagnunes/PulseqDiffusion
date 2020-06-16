@@ -1,29 +1,49 @@
 %% Read Me
-% Inspired in the function SNRandCNRfieldDependenceJMRI.m - from JP Marques, 2019
 % 
+% by:
+% T.T. Fernandes, September 2019
+% LarSys - Instituto Superior Técnico - Universidade de Lisboa
+%
+%
+% description:
 % This code simulates the impact of SNR of a given Spiral (with its
-% specific parameters, and outputs the SNR and CNR value compared with EPI)
-% by: TiagoF, September 2019
-% Larsys - Instituto Superior Técnico - Universidade de Lisboa
+%   specific parameters), and outputs the SNR and CNR value compared with
+%   an EPI sequence
+% Inspired in the function SNRandCNRfieldDependenceJMRI.m - from JP
+%   Marques, 2019 - DOI: 10.1002/jmri.26637
+%
+% It loads two '.mat' files:
+%   'Tend_vector_1shot.mat' - vector of values for time of readout for a
+%      one shot spiral with different max. gradients (between [1 2:2:30]
+%      in (T/m) ) and with different spatial resolution (between [2:0.5:6] 
+%      in (mm) ).
+%   'Tend_vector_EPI.mat'   - vector of values for time of readout for a
+%      EPI sequence with different max. gradients (between [1 2:2:30]
+%      in (T/m) ) and with different spatial resolution (between [2:0.5:6] 
+%      in (mm) ).
+%
+% =========================================================================
 
-addpath(genpath('D:\Tiago\Trabalho\2018_IST\Projeto\SNR_CNR_Study'));
+%% Add path
+
+addpath(genpath('..\SNR_CNR_Study'));
 
 clear all
 % close all
 clc
 tic
 
-%% 0 - values to visualize
+%% 0 - Select values to visualize in the figures
 % Values for plot
 
 ratio = 0;
 if ratio == 0    
-    valuegmMax  = 0.026;
-    valueB      = 800;
-    valueRes    = 2.5;
-    valueB0     = 0.5;
+    valuegmMax  = 0.016;
+    valueB      = 400;
+    valueRes    = 3.5;
+    valueB0     = 0.05;
     
-    seq         = 'S';     % Choose sequence: 'S' - Spiral or 'E' - Echo Planar Imaging
+    seq         = 'S';     % Choose sequence: 'S' - Spiral or 'E' - partial Echo Planar Imaging
     percSNRinit = 1/40;    % value for colour bar relative to SNRinit = 40
     sizeB0res   = 9;       % for resolution plots
     logscale    = 1;       % Logorithmic scale = 1 or = 0 no log scale+
@@ -64,10 +84,10 @@ elseif (ratio == 0) && (seq == 'E')   % load Tend_vector_EPI
 end
 
 % ADCs for each tissue
-D_CSF = 3.2*1e-3;   % Diffusivity of CSF (mm^2 refSNRinit* s^-1) - Tese Nunes R.G.
-D_GM  = 0.8*1e-3;   % Diffusivity of GM - Tese Nunes R.G.
-D_WM  = 0.7*1e-3;   % Diffusivity of WM - Tese Nunes R.G.
-D_LS  = 0.55*1e-3;  % Diffusivity of LS - Knight, 2019
+D_CSF = 3.2*1e-3;   % Diffusivity of CSF (mm^2 refSNRinit* s^-1) - PhD Thesis Nunes R.G. - 
+D_GM  = 0.8*1e-3;   % Diffusivity of GM - PhD Thesis Nunes R.G. - 
+D_WM  = 0.7*1e-3;   % Diffusivity of WM - PhD Thesis Nunes R.G. - 
+D_LS  = 0.55*1e-3;  % Diffusivity of LS - Knight et. al, 2019 - DOI: 10.3233/bsi-190185
 
 % Counting the number of repetitions -N slices
 Z_size    = 120;    % dimention of the brain in zz axes (mm)
@@ -90,8 +110,9 @@ tests    = 0;          % Tests for each variable that contribute to SNR
 %% 2 - initializing relaxation times field dependence
 % Longitudinal and transverse relaxation rates using the models presented
 % in:
-% - Rooney et al MRM 2007;
-% - Pohmann et al MRM 2016;GREs_LS_B0ref
+% - Rooney et al MRM 2007  - DOI: 10.1002/mrm.21122 ;
+% - Pohmann et al MRM 2016 - DOI: 10.1002/mrm.25677 ;
+% - Bottemley et al, Med Phys, 1984 - DOI:  10.1118/1.595535 ;
 
 % R1 as a function of magnetic field according to Rooney et al, MRM, 2007
 % and using a model suggested by Bottemley et al, Med Phys, 1984 - Time (s)
@@ -105,10 +126,14 @@ T1_CSF =1/0.231 * ones(size(B0));
 T2s_GM = 0.090 * exp(-0.142 *B0);
 T2s_WM = 0.064 * exp(-0.132 *B0);
 T2s_LS = T2s_WM;
-T2s_CSF = 0.1*ones(size(B0)); % made up.. but not too relevant
+T2s_CSF = 0.1*ones(size(B0));
 
 
-%% 3 - Functions - Ernst Angle, GRE signal calculation & Diffusion calculation
+%% 3 - Defining Functions:
+%       - Ernst Angle; 
+%       - GRE signal calculation;
+%       - Diffusion calculation;
+%       - Echo Time (TE) for Spiral and partial EPI;
 
 % Ernst Angle Calculation in degrees
 Ernstangle_d = @(TRep,T1) acosd( exp(-TRep./T1) );
@@ -116,30 +141,32 @@ Ernstangle_d = @(TRep,T1) acosd( exp(-TRep./T1) );
 % GRESignal calculation in degrees
 GRESignal    = @(FlipAngle,TRep,TE,T1,T2) sind(FlipAngle).*exp(-TE/T2).*(1-exp(-TRep/T1))./(1-(exp(-TRep/T1)).*cosd(FlipAngle));
 
-% Diffusion calculation
+% Diffusion signal calculation
 DWSignal     = @(b_value,ADC) exp(-b_value*ADC);
 
 % Echo Time (TE) (s) for trapezoidical gradients and Spiral
 TE_time      = @(b_value,gmMax) ((12 .* b_value) ./ ((gamma.*2*pi).^2 * gmMax.^2)).^(1/3);
 
-% Echo Time (TE) (s) for trapezoidical gradients and EPI
+% Echo Time (TE) (s) for trapezoidical gradients and partial EPI
 aux_delta    = @(b_value,gmMax,part_Tend)   (  24*b_value*(gamma.*2*pi*gmMax).^4  - (gamma.*2*pi*gmMax).^6.*part_Tend.^3  +  4*sqrt(3)*sqrt(  12*b_value^2*(gamma.*2*pi*gmMax).^8 - b_value*(gamma.*2*pi*gmMax).^10.*part_Tend.^3  )  ).^(1/3);
 delta        = @(gmMax,part_Tend,aux_delta) (-part_Tend)/4  - ((1-1*i*sqrt(3))*(gamma.*2*pi*gmMax.*part_Tend).^2) ./ (8*aux_delta)  -  ((1-1*i*sqrt(3))*aux_delta) ./ (8*(gamma.*2*pi*gmMax).^2);
 
 %% 4 - Select ref SNR expressions for EPI and for a value of SNR=40
 
 SNR_B0ref     = B0(refB0idx).^SNR_PowerLaw;
-% TE reference with EPI
+
+% TE reference with partial EPI - results from the derivation of the b-value formula
 percTrout     = 0.285714;                                               % percentage of time to get to the centre k_space
 T_endRef      = load('Tend_vector_EPI.mat');
 part_Tend_ref = percTrout*T_endRef.Tend_Vector(refgmMax,refRes)*1e-3;   % sequence readout time until k_space center in (s)
 auxD_ref      = aux_delta(convertB,gmMax,part_Tend_ref);                % auxiliar
 deltaEPI_ref  = delta(gmMax,part_Tend_ref,auxD_ref);                    % delta in (s)
 TE_B0ref      = 2*(part_Tend_ref+abs(deltaEPI_ref));                    % TE = delta + sequence readout until k_space center in (s)
+
 % TE reference with Spiral
 TTotal_B0ref  = Tend_Vector(refgmMax,refRes)*1e-3*(1-percTrout) + TE_B0ref;  % TR per slice
 TRo_B0ref     = Tend_Vector(refgmMax,refRes)*1e-3*(1-percTrout);             % Time of Read Out
-Nslic_ref     = Z_size/resNEW(refRes);                                       % N of slices in reference
+Nslic_ref     = Z_size/resNEW(refRes);                                       % Number of slices in reference
 
 clear part_Tend_ref auxD_ref deltaEPI_ref T_endRef
 
@@ -168,7 +195,7 @@ S_LS_B0ref    = GREs_LS_B0ref * DWs_LS_B0ref;
 SNR_LS_ref    = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_LS_B0ref * (resNEW(refRes)/resINI)^3;
 
 
-%% 5 - variation for B0, gm, Nslices, res, b_value ...
+%% 5 - variation of SNR for B0, gm, Nslices, res, b_value ...
 
 clear TE TTotal TR BW SNR_B0_SNRinit SNR_SE_GM SNR_SE_WM SNR_SE_LS TRo CNR_SE_GM_LS ...
       SNR_SE_WM CNR_SE_WM_LS S_GM_SNRinit S_WM_SNRinit S_LS_SNRinit 
@@ -276,7 +303,7 @@ for uu=1:size(aux_Cut,1)
 end
 
 
-%% 7 - SNR plots for a reference SNR for each Condition of B0
+%% 6 - SNR plots for a reference SNR for each Condition of B0
 % Using the relationship SNR_new / SNR_ref = (B0new/B0ref)^b
 
 plotgmMax  = find(round(gmMaxVector,3)==round(valuegmMax,3)); % gmMax   = 31 mT/m
@@ -312,6 +339,7 @@ if logscale == 1
     yticklabels(B0)
     xticklabels(gmMaxVector*10^3)
     caxis([valueMinCMlog valueMaxCMlog])
+    colorbar
     
     subplot(132)
     imagesc(log(reshape(SNR_SE_WM(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2))))
@@ -326,6 +354,7 @@ if logscale == 1
     yticklabels(B0)
     xticklabels(gmMaxVector*10^3)
     caxis([valueMinCMlog valueMaxCMlog])
+    colorbar
     
     subplot(133)
     imagesc(log(reshape(SNR_SE_LS(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2))))
@@ -340,7 +369,7 @@ if logscale == 1
     yticklabels(B0)
     xticklabels(gmMaxVector*10^3)
     caxis([valueMinCMlog valueMaxCMlog])
-    
+    colorbar
     
     % ... 2 - Plot Matrices of SNR for resolution ...
     fSNR_Slice = figure('name',['logScale - SNR (SE - ',plot_seq,') variation w/ resolution (Diffusion) - gm=', ... 
@@ -361,6 +390,7 @@ if logscale == 1
     yticklabels(B0(1:sizeB0res))
     xticklabels(resNEW)
     caxis([valueMinCMlog valueMaxCMlog])
+    colorbar
     
     subplot(132)
     imagesc(log(reshape(SNR_SE_WM(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2))))
@@ -375,6 +405,7 @@ if logscale == 1
     yticklabels(B0(1:sizeB0res))
     xticklabels(resNEW)
     caxis([valueMinCMlog valueMaxCMlog])
+    colorbar
     
     subplot(133)
     imagesc(log(reshape(SNR_SE_LS(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2))))
@@ -389,7 +420,8 @@ if logscale == 1
     yticklabels(B0(1:sizeB0res))
     xticklabels(resNEW)
     caxis([valueMinCMlog valueMaxCMlog])
-            
+    colorbar
+    
 else
     % ... 1 - Plot Matrices of SNR for GM Max...
     fSNR_gmMax = figure('name',['SNR (SE - ',plot_seq,') variation w/ Gm Max (Diffusion) - b_value=', ... 
@@ -409,7 +441,8 @@ else
     xticks(1:1:size(gmMaxVector,2)*2)
     yticklabels(B0)
     xticklabels(gmMaxVector*10^3)
-    caxis([0 valueMaxCM])
+%     caxis([0 valueMaxCM])
+    colorbar
     
     subplot(132)
     imagesc(reshape(SNR_SE_WM(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2)))
@@ -423,7 +456,8 @@ else
     xticks(1:1:size(gmMaxVector,2)*2)
     yticklabels(B0)
     xticklabels(gmMaxVector*10^3)
-    caxis([0 valueMaxCM])
+%     caxis([0 valueMaxCM])
+    colorbar
     
     subplot(133)
     imagesc(reshape(SNR_SE_LS(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2)))
@@ -437,8 +471,8 @@ else
     xticks(1:1:size(gmMaxVector,2)*2)
     yticklabels(B0)
     xticklabels(gmMaxVector*10^3)
-    caxis([0 valueMaxCM])
-
+%     caxis([0 valueMaxCM])
+    colorbar
     
     % ... 2 - Plot Matrices of SNR for resolution ...
     fSNR_Slice = figure('name',['SNR (SE - ',plot_seq,') variation w/ resolution (Diffusion) - gm=', ... 
@@ -458,7 +492,8 @@ else
     xticks(1:1:size(resNEW,2)*2)
     yticklabels(B0(1:sizeB0res))
     xticklabels(resNEW)
-    caxis([0 valueMaxCM])
+%     caxis([0 valueMaxCM])
+    colorbar
     
     subplot(132)
     imagesc(reshape(SNR_SE_WM(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2)))
@@ -472,7 +507,8 @@ else
     xticks(1:1:size(resNEW,2)*2)
     yticklabels(B0(1:sizeB0res))
     xticklabels(resNEW)
-    caxis([0 valueMaxCM])
+%     caxis([0 valueMaxCM])
+    colorbar
     
     subplot(133)
     imagesc(reshape(SNR_SE_LS(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2)))
@@ -486,7 +522,8 @@ else
     xticks(1:1:size(resNEW,2)*2)
     yticklabels(B0(1:sizeB0res))
     xticklabels(resNEW)
-    caxis([0 valueMaxCM])  
+%     caxis([0 valueMaxCM])
+    colorbar
 end
 
 % ... 3 - Plot Values of SNR for b_values ...
@@ -522,169 +559,179 @@ lgd.FontSize = 20;
 lgd.LineWidth = 4;
     
     
-%% 8 - auxiliar (Plots for CNR)
-% % if logscale == 1
-% %     % ... Plot Matrices of CNR for gmax & TE ...
-% %     fCNR_gmMax_Contrast = figure('name',['logscale - CNR (SE - ',plot_seq,') variation w/ Gm Max (Diffusion) - b_value=', ...
-% %         num2str(valueB),' - Nslices=',num2str(valueNslice), ...
-% %         ' - res=',num2str(valueRes)], ...
-% %         'numbertitle','off','Color',[1 1 1]);
-% %     set(fCNR_gmMax_Contrast,'Position',[ 461   474   917   369],'Color',[1 1 1])
-% %     
-% %     subplot(121)
-% %     imagesc(log(reshape(CNR_SE_GM_LS(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2))))
-% %     hold on
-% %     grid on
-% %     title('logscale - CNR for GM LS contrast','fontsize',20)
-% %     ylabel(['B0 (T)'],'fontsize',20)
-% %     xlabel(['GM max Value (mT/m)'],'fontsize',20)
-% %     set(gca,'FontSize',15)
-% %     yticks(1:1:size(B0,2)*2)
-% %     xticks(1:1:size(gmMaxVector,2)*2)
-% %     yticklabels(B0)
-% %     xticklabels(gmMaxVector*10^3)
-% %     caxis([valuelogMinContrast valuelogMaxContrast])
-% %     subplot(122)
-% %     imagesc(log(reshape(CNR_SE_WM_LS(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2))))
-% %     hold on
-% %     grid on
-% %     title('logscale - CNR for WM LS contrast','fontsize',20)
-% % %     ylabel(['B0 (T)'],'fontsize',20)
-% %     xlabel(['GM max Value (mT/m)'],'fontsize',20)
-% %     set(gca,'FontSize',15)
-% %     yticks(1:1:size(B0,2)*2)
-% %     xticks(1:1:size(gmMaxVector,2)*2)
-% %     yticklabels(B0)
-% %     xticklabels(gmMaxVector*10^3)
-% %     caxis([valuelogMinContrast valuelogMaxContrast])
-% %     
-% %     
-% %     % ... Plot Matrices of CNR for resolution ...
-% %     fCNR_Res_Contrast = figure('name',['logscale - CNR (SE - ',plot_seq,') variation w/ resolution (Diffusion) - gm=', ...
-% %         num2str(valuegmMax),' - Nslices=',num2str(valueNslice),' - b-value=',num2str(valueB)], ...
-% %         'numbertitle','off','Color',[1 1 1]);
-% %     set(fCNR_Res_Contrast,'Position',[ 461   474   917   369],'Color',[1 1 1])
-% %     
-% %     subplot(121)
-% %     imagesc(log(reshape(CNR_SE_GM_LS(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2))))
-% %     hold on
-% %     grid on
-% %     title('logscale - CNR for GM LS contrast','fontsize',20)
-% %     ylabel(['B0 (T)'],'fontsize',20)
-% %     xlabel(['Resolution (mm)'],'fontsize',20)
-% %     set(gca,'FontSize',15)
-% %     yticks(1:1:sizeB0res*2)
-% %     xticks(1:1:size(resNEW,2)*2)
-% %     yticklabels(B0(1:sizeB0res))
-% %     xticklabels(resNEW)
-% %     caxis([valuelogMinContrast valuelogMaxContrast])
-% %     subplot(122)
-% %     imagesc(log(reshape(CNR_SE_WM_LS(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2))))
-% %     hold on
-% %     grid on
-% %     title('logscale - CNR for WM LS contrast')
-% % %     ylabel(['B0 (T)'])
-% %     xlabel(['Resolution (mm)'])
-% %     set(gca,'FontSize',15)
-% %     yticks(1:1:sizeB0res*2)
-% %     xticks(1:1:size(resNEW,2)*2)
-% %     yticklabels(B0(1:sizeB0res))
-% %     xticklabels(resNEW)
-% %     caxis([valuelogMinContrast valuelogMaxContrast])   
-% %     
-% % else         % no logscale
-% %     % ... Plot Matrices of CNR for gmax & TE ...
-% %     fCNR_gmMax_Contrast = figure('name',['CNR (SE - ',plot_seq,') variation w/ Gm Max (Diffusion) - b_value=', ...
-% %         num2str(valueB),' - Nslices=',num2str(valueNslice), ...
-% %         ' - res=',num2str(valueRes)], ...
-% %         'numbertitle','off','Color',[1 1 1]);
-% %     set(fCNR_gmMax_Contrast,'Position',[ 461   474   917   369],'Color',[1 1 1])
-% %     
-% %     subplot(121)
-% %     imagesc(reshape(CNR_SE_GM_LS(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2)))
-% %     hold on
-% %     grid on
-% %     title('CNR for GM LS contrast','fontsize',20)
-% %     ylabel(['B0 (T)'],'fontsize',20)
-% %     xlabel(['GM max Value (mT/m)'],'fontsize',20)
-% %     set(gca,'FontSize',15)
-% %     yticks(1:1:size(B0,2)*2)
-% %     xticks(1:1:size(gmMaxVector,2)*2)
-% %     yticklabels(B0)
-% %     xticklabels(gmMaxVector*10^3)
-% %     caxis([0 valueMaxContrast])
-% %     subplot(122)
-% %     imagesc(reshape(CNR_SE_WM_LS(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2)))
-% %     hold on
-% %     grid on
-% %     title('CNR for WM LS contrast','fontsize',20)
-% % %     ylabel(['B0 (T)'],'fontsize',20)
-% %     xlabel(['GM max Value (mT/m)'],'fontsize',20)
-% %     set(gca,'FontSize',15)
-% %     yticks(1:1:size(B0,2)*2)
-% %     xticks(1:1:size(gmMaxVector,2)*2)
-% %     yticklabels(B0)
-% %     xticklabels(gmMaxVector*10^3)
-% %     caxis([0 valueMaxContrast])
-% %     
-% %     
-% %     % ... Plot Matrices of CNR for resolution ...
-% %     fCNR_Res_Contrast = figure('name',['CNR (SE - ',plot_seq,') variation w/ resolution (Diffusion) - gm=', ...
-% %         num2str(valuegmMax),' - Nslices=',num2str(valueNslice),' - b-value=',num2str(valueB)], ...
-% %         'numbertitle','off','Color',[1 1 1]);
-% %     set(fCNR_Res_Contrast,'Position',[ 461   474   917   369],'Color',[1 1 1])
-% %     
-% %     subplot(121)
-% %     imagesc(reshape(CNR_SE_GM_LS(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2)))
-% %     hold on
-% %     grid on
-% %     title('CNR for GM LS contrast','fontsize',20)
-% %     ylabel(['B0 (T)'],'fontsize',20)
-% %     xlabel(['Resolution (mm)'],'fontsize',20)
-% %     set(gca,'FontSize',15)
-% %     yticks(1:1:sizeB0res*2)
-% %     xticks(1:1:size(resNEW,2)*2)
-% %     yticklabels(B0(1:sizeB0res))
-% %     xticklabels(resNEW)
-% %     caxis([0 valueMaxContrast])
-% %     subplot(122)
-% %     imagesc(reshape(CNR_SE_WM_LS(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2)))
-% %     hold on
-% %     grid on
-% %     title('CNR for WM LS contrast','fontsize',20)
-% % %     ylabel(['B0 (T)'],'fontsize',20)
-% %     xlabel(['Resolution (mm)'],'fontsize',20)
-% %     set(gca,'FontSize',15)
-% %     yticks(1:1:sizeB0res*2)
-% %     xticks(1:1:size(resNEW,2)*2)
-% %     yticklabels(B0(1:sizeB0res))
-% %     xticklabels(resNEW)
-% %     caxis([0 valueMaxContrast])        
-% % end
-% % 
-% % % ... Plot Values of CNR contrast for b-value ...
-% % fCNR_bValue_Contrast = figure('name',['CNR (SE - ',plot_seq,') matrix variation w/ b_values (Diffusion) - gm=', ...
-% %     num2str(valuegmMax),' - B0=', num2str(valueB0),' - Nslices=',num2str(valueNslice),' - res=',num2str(valueRes)], ...
-% %     'numbertitle','off','Color',[1 1 1]);
-% % set(fCNR_bValue_Contrast,'Position',[ 461   474   917   369],'Color',[1 1 1])
-% % 
-% % % subplot(121)
-% % plot(b_vector,CNR_SE_GM_LS(plotB0,:,plotgmMax,plotRes),'Color','c')
-% % ylabel([' CNR (au)'],'fontsize',20)
-% % xlabel(['b_{value}'],'fontsize',20)
-% % % title('CNR for GM LS contrast','fontsize',20)
-% % set(gca,'FontSize',15)
-% % hold on
-% % % subplot(122)
-% % plot(b_vector,CNR_SE_WM_LS(plotB0,:,plotgmMax,plotRes),'Color','b')
-% % % ylabel([' CNR (au)'],'fontsize',20)
-% % xlabel(['b_{value}'],'fontsize',20)
-% % title('CNR variation with B-value, for each contrast','fontsize',20)
-% % set(gca,'FontSize',15)
-% % hold on
-% % grid on
-% % lgd = legend('GM-LS Contrast','WM-LS Contrast');
-% % lgd.FontSize = 20;
+%% 7 - auxiliar (Plots for CNR)
+if logscale == 1
+    % ... Plot Matrices of CNR for gmax & TE ...
+    fCNR_gmMax_Contrast = figure('name',['logscale - CNR (SE - ',plot_seq,') variation w/ Gm Max (Diffusion) - b_value=', ...
+        num2str(valueB),' - Nslices=',num2str(valueNslice), ...
+        ' - res=',num2str(valueRes)], ...
+        'numbertitle','off','Color',[1 1 1]);
+    set(fCNR_gmMax_Contrast,'Position',[ 461   474   917   369],'Color',[1 1 1])
+    
+    subplot(121)
+    imagesc(log(reshape(CNR_SE_GM_LS(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2))))
+    hold on
+    grid on
+    title('logscale - CNR for GM LS contrast','fontsize',20)
+    ylabel(['B0 (T)'],'fontsize',20)
+    xlabel(['GM max Value (mT/m)'],'fontsize',20)
+    set(gca,'FontSize',15)
+    yticks(1:1:size(B0,2)*2)
+    xticks(1:1:size(gmMaxVector,2)*2)
+    yticklabels(B0)
+    xticklabels(gmMaxVector*10^3)
+    caxis([valuelogMinContrast valuelogMaxContrast])
+    colorbar
+    
+    subplot(122)
+    imagesc(log(reshape(CNR_SE_WM_LS(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2))))
+    hold on
+    grid on
+    title('logscale - CNR for WM LS contrast','fontsize',20)
+%     ylabel(['B0 (T)'],'fontsize',20)
+    xlabel(['GM max Value (mT/m)'],'fontsize',20)
+    set(gca,'FontSize',15)
+    yticks(1:1:size(B0,2)*2)
+    xticks(1:1:size(gmMaxVector,2)*2)
+    yticklabels(B0)
+    xticklabels(gmMaxVector*10^3)
+    caxis([valuelogMinContrast valuelogMaxContrast])
+    colorbar  
+    
+    % ... Plot Matrices of CNR for resolution ...
+    fCNR_Res_Contrast = figure('name',['logscale - CNR (SE - ',plot_seq,') variation w/ resolution (Diffusion) - gm=', ...
+        num2str(valuegmMax),' - Nslices=',num2str(valueNslice),' - b-value=',num2str(valueB)], ...
+        'numbertitle','off','Color',[1 1 1]);
+    set(fCNR_Res_Contrast,'Position',[ 461   474   917   369],'Color',[1 1 1])
+    
+    subplot(121)
+    imagesc(log(reshape(CNR_SE_GM_LS(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2))))
+    hold on
+    grid on
+    title('logscale - CNR for GM LS contrast','fontsize',20)
+    ylabel(['B0 (T)'],'fontsize',20)
+    xlabel(['Resolution (mm)'],'fontsize',20)
+    set(gca,'FontSize',15)
+    yticks(1:1:sizeB0res*2)
+    xticks(1:1:size(resNEW,2)*2)
+    yticklabels(B0(1:sizeB0res))
+    xticklabels(resNEW)
+    caxis([valuelogMinContrast valuelogMaxContrast])
+    colorbar
+    
+    subplot(122)
+    imagesc(log(reshape(CNR_SE_WM_LS(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2))))
+    hold on
+    grid on
+    title('logscale - CNR for WM LS contrast')
+%     ylabel(['B0 (T)'])
+    xlabel(['Resolution (mm)'])
+    set(gca,'FontSize',15)
+    yticks(1:1:sizeB0res*2)
+    xticks(1:1:size(resNEW,2)*2)
+    yticklabels(B0(1:sizeB0res))
+    xticklabels(resNEW)
+    caxis([valuelogMinContrast valuelogMaxContrast])   
+    colorbar
+    
+else         % no logscale
+    % ... Plot Matrices of CNR for gmax & TE ...
+    fCNR_gmMax_Contrast = figure('name',['CNR (SE - ',plot_seq,') variation w/ Gm Max (Diffusion) - b_value=', ...
+        num2str(valueB),' - Nslices=',num2str(valueNslice), ...
+        ' - res=',num2str(valueRes)], ...
+        'numbertitle','off','Color',[1 1 1]);
+    set(fCNR_gmMax_Contrast,'Position',[ 461   474   917   369],'Color',[1 1 1])
+    
+    subplot(121)
+    imagesc(reshape(CNR_SE_GM_LS(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2)))
+    hold on
+    grid on
+    title('CNR for GM LS contrast','fontsize',20)
+    ylabel(['B0 (T)'],'fontsize',20)
+    xlabel(['GM max Value (mT/m)'],'fontsize',20)
+    set(gca,'FontSize',15)
+    yticks(1:1:size(B0,2)*2)
+    xticks(1:1:size(gmMaxVector,2)*2)
+    yticklabels(B0)
+    xticklabels(gmMaxVector*10^3)
+    caxis([0 valueMaxContrast])
+    colorbar
+    
+    subplot(122)
+    imagesc(reshape(CNR_SE_WM_LS(:,plotb,:,plotRes),size(B0,2),size(gmMaxVector,2)))
+    hold on
+    grid on
+    title('CNR for WM LS contrast','fontsize',20)
+%     ylabel(['B0 (T)'],'fontsize',20)
+    xlabel(['GM max Value (mT/m)'],'fontsize',20)
+    set(gca,'FontSize',15)
+    yticks(1:1:size(B0,2)*2)
+    xticks(1:1:size(gmMaxVector,2)*2)
+    yticklabels(B0)
+    xticklabels(gmMaxVector*10^3)
+    caxis([0 valueMaxContrast])
+    colorbar
+    
+    % ... Plot Matrices of CNR for resolution ...
+    fCNR_Res_Contrast = figure('name',['CNR (SE - ',plot_seq,') variation w/ resolution (Diffusion) - gm=', ...
+        num2str(valuegmMax),' - Nslices=',num2str(valueNslice),' - b-value=',num2str(valueB)], ...
+        'numbertitle','off','Color',[1 1 1]);
+    set(fCNR_Res_Contrast,'Position',[ 461   474   917   369],'Color',[1 1 1])
+    
+    subplot(121)
+    imagesc(reshape(CNR_SE_GM_LS(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2)))
+    hold on
+    grid on
+    title('CNR for GM LS contrast','fontsize',20)
+    ylabel(['B0 (T)'],'fontsize',20)
+    xlabel(['Resolution (mm)'],'fontsize',20)
+    set(gca,'FontSize',15)
+    yticks(1:1:sizeB0res*2)
+    xticks(1:1:size(resNEW,2)*2)
+    yticklabels(B0(1:sizeB0res))
+    xticklabels(resNEW)
+    caxis([0 valueMaxContrast])
+    colorbar
+    
+    subplot(122)
+    imagesc(reshape(CNR_SE_WM_LS(1:sizeB0res,plotb,plotgmMax,:),sizeB0res,size(resNEW,2)))
+    hold on
+    grid on
+    title('CNR for WM LS contrast','fontsize',20)
+%     ylabel(['B0 (T)'],'fontsize',20)
+    xlabel(['Resolution (mm)'],'fontsize',20)
+    set(gca,'FontSize',15)
+    yticks(1:1:sizeB0res*2)
+    xticks(1:1:size(resNEW,2)*2)
+    yticklabels(B0(1:sizeB0res))
+    xticklabels(resNEW)
+    caxis([0 valueMaxContrast])
+    colorbar
+end
+
+% ... Plot Values of CNR contrast for b-value ...
+fCNR_bValue_Contrast = figure('name',['CNR (SE - ',plot_seq,') matrix variation w/ b_values (Diffusion) - gm=', ...
+    num2str(valuegmMax),' - B0=', num2str(valueB0),' - Nslices=',num2str(valueNslice),' - res=',num2str(valueRes)], ...
+    'numbertitle','off','Color',[1 1 1]);
+set(fCNR_bValue_Contrast,'Position',[ 461   474   917   369],'Color',[1 1 1])
+
+% subplot(121)
+plot(b_vector,CNR_SE_GM_LS(plotB0,:,plotgmMax,plotRes),'Color','c')
+ylabel([' CNR (au)'],'fontsize',20)
+xlabel(['b_{value}'],'fontsize',20)
+% title('CNR for GM LS contrast','fontsize',20)
+set(gca,'FontSize',15)
+hold on
+% subplot(122)
+plot(b_vector,CNR_SE_WM_LS(plotB0,:,plotgmMax,plotRes),'Color','b')
+% ylabel([' CNR (au)'],'fontsize',20)
+xlabel(['b_{value}'],'fontsize',20)
+title('CNR variation with B-value, for each contrast','fontsize',20)
+set(gca,'FontSize',15)
+hold on
+grid on
+lgd = legend('GM-LS Contrast','WM-LS Contrast');
+lgd.FontSize = 20;
 
 %% Paper Figure 5: plot for SNR & CNR variation with b-value
 
@@ -806,7 +853,7 @@ elseif logscale == 0
     
 end
 
-%% Paper Figure xxb: Plots WM - SNR & CNR (WM-LS) - gm, res
+%% Paper Figure 5: Plots WM - SNR & CNR (WM-LS) - gm, res
 
 if logscale == 1
     % SNR WM - gm
@@ -824,6 +871,8 @@ if logscale == 1
     yticklabels(B0)
     xticklabels(gmMaxVector*10^3)
     caxis([valueMinCMlog valueMaxCMlog])
+    colorbar
+    
     hold on
     plot(plotgmMax,plotB0, 'r+', 'MarkerSize', 20, 'LineWidth', 2);
     
@@ -841,7 +890,9 @@ if logscale == 1
     xticks(1:1:size(resNEW,2)*2)
     yticklabels(B0(1:sizeB0res))
     xticklabels(resNEW)
-    caxis([valueMinCMlog valueMaxCMlog])    
+    caxis([valueMinCMlog valueMaxCMlog])
+    colorbar
+    
     hold on
     plot(plotRes,plotB0, 'r+', 'MarkerSize', 20, 'LineWidth', 2);   
     
@@ -860,6 +911,7 @@ if logscale == 1
     yticklabels(B0)
     xticklabels(gmMaxVector*10^3)
     caxis([valuelogMinContrast valuelogMaxContrast])
+    colorbar
     hold on
     plot(plotgmMax,plotB0, 'r+', 'MarkerSize', 20, 'LineWidth', 2);
     
@@ -878,6 +930,7 @@ if logscale == 1
     yticklabels(B0(1:sizeB0res))
     xticklabels(resNEW)
     caxis([valuelogMinContrast valuelogMaxContrast])
+    colorbar
     hold on
     plot(plotRes,plotB0, 'r+', 'MarkerSize', 20, 'LineWidth', 2);
     

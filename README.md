@@ -14,9 +14,21 @@ The images can then be processed utilizing freely available post-processing tool
 
 A tool for predicting the signal-to-noise ratio (SNR) observed for different brain tissues (gray matter, white matter, cerebrospinal fluid - CSF) and the contrast-to-noise ratio (CNR) of an acute stroke lesion relative to those tissues can be found in `jMRI_Publication_Functions`. The implemented code predicts the SNR and CNR per time unit for a spin-echo diffusion-weighted sequence, taking into account the steady-state value for the longitudinal magnetization. For that purpose, we adapted an expression used to predict the SNR per tissue per time unit for a spoiled gradient echo sequence [[6]](#references). This simulation considers the possibility to use either EPI or spiral readouts and considers the impact of: B0, max gradient amplitude, spatial resolution and b-value (comparing the achieved SNR with that of a typical 1.5T clinical scanner).
 
-Software dependencies:
-Matlab toolbox for writing and reading Nifti images: Nifti_tools [[7]](#references)
+## Installation and Dependencies
+For sequence optimization depending on available hardware (`jMRI_Publication_Functions`): Matlab (www.mathworks.com)
+
+For sequence development: PyPulseq [[2]] (#references)
+\>=Python 3.6, virtual environment recommended:
+```pip install pypulseq```
+
+To perform basic image reconstruction and processing:
+Matlab toolbox for writing and reading Nifti images: Nifti_tools downloadable from [[7]](#references)
+
 FSL - Fmrib's Software Library [[5]](#references)
+FSL installation instructions can be found at:
+https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation
+
+Note: raw MRI data readers are vendor specific and hence cannot be provided.
 
 ---
 ## [Citations][scholar-citations]
@@ -26,5 +38,5 @@ FSL - Fmrib's Software Library [[5]](#references)
 3. Ravi, K., Potdar, S., Poojar. P, Reddy, A., Kroboth, S., Nielsen, J., Zaitsev, M., Venkatesan, R & Geethanath, S. (2018). Pulseq-Graphical Programming Interface: Open source visual environment for prototyping pulse sequences and integrated magnetic resonance imaging algorithm development. Magnetic resonance imaging 52: 9-15.
 4. Nunes, R.G., Ravi, K.S.,  Geethanath, S., Vaughan Jr, J.T. (2020). “Implementation of a Diffusion-Weighted Echo Planar Imaging sequence using the Open Source Hardware-Independent PyPulseq Tool”, 28th Annual Meeting of the International Society for Magnetic Resonance in Medicine, Sidney, Australia.
 5. Jenkinson, M., Beckmann, C.F., Behrens, T.E., Woolrich, M.W., Smith, S.M. (2012). "FSL". NeuroImage, 62:782-90.
-6. Fernandes, T.T., Gobul, M., Freitas, A.F., Geethanath, S., Nunes, R.G., (2020). "Diffusion-weighted imaging for acute stroke detection at low field MR - a feasibility study”, 28th Annual Meeting of the International Society for Magnetic Resonance in Medicine, Sidney, Australia.
+6. Fernandes, T.T., Golub, M., Freitas, A.C., Geethanath, S., Nunes, R.G., (2020). "Diffusion-weighted imaging for acute stroke detection at low field MR - a feasibility study”, 28th Annual Meeting of the International Society for Magnetic Resonance in Medicine, Sidney, Australia.
 7. https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image 

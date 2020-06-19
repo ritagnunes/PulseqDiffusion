@@ -6,9 +6,18 @@
 %
 %
 % description:
-% This code simulates the impact of SNR of a given Spiral (with its
-%   specific parameters), and outputs the SNR and CNR value compared with
-%   an EPI sequence
+% A tool for predicting the signal-to-noise ratio (SNR) observed for
+%   different brain tissues (gray matter, white matter, cerebrospinal 
+%   fluid - CSF) and the contrast-to-noise ratio (CNR) of an acute stroke
+%   lesion relative to those tissues. The implemented code predicts the 
+%   SNR and CNR per time unit for a spin-echo diffusion-weighted sequence, 
+%   taking into account the steady-state value for the longitudinal
+%   magnetization. For that purpose, we adapted an expression used to
+%   predict the SNR per tissue per time unit for a spoiled gradient echo
+%   sequence [6]. This simulation considers the possibility to use either
+%   EPI or spiral readouts and considers the impact of: B0, max gradient
+%   amplitude, spatial resolution and b-value (comparing the achieved SNR
+%   with that of a typical 1.5T clinical scanner).
 % Inspired in the function SNRandCNRfieldDependenceJMRI.m - from JP
 %   Marques, 2019 - DOI: 10.1002/jmri.26637
 %
@@ -38,43 +47,43 @@ tic
 
 ratio = 0;
 if ratio == 0    
-    valuegmMax  = 0.016;
-    valueB      = 400;
-    valueRes    = 3.5;
-    valueB0     = 0.05;
-    
+    valuegmMax  = 0.026;   % value for plot - Max Gradient (T/m)
+    valueB      = 800;     % value for plot - b-value (s*mm^-2)
+    valueRes    = 2.5;     % value for plot - Resolution (mm)
+    valueB0     = 0.5;     % value for plot - B0 field (T)
+    % defaults
     seq         = 'S';     % Choose sequence: 'S' - Spiral or 'E' - partial Echo Planar Imaging
     percSNRinit = 1/40;    % value for colour bar relative to SNRinit = 40
     sizeB0res   = 9;       % for resolution plots
-    logscale    = 1;       % Logorithmic scale = 1 or = 0 no log scale+
+    logscale    = 0;       % Logorithmic scale = 1 or = 0 no log scale+
     refScan     = 1;       % '1' - ref SNR & CNR values to EPI clinical Scanner (SNR_WM = 40 per time unit) or '0' - arbitary units
 end
 
 %% 1 - initializing variables
 
-% initial variables
+% ... initial variables ... 
 gamma        = 42.577e6;     % gyromagnetic constant in Hz/T
 SNR_PowerLaw = 1.5;          % at high fields this has been measured at 1.68, at lower fields it is expected to tend towards 1 because noise in the sample
 
-% range of b-value
+% ... range of b-value ... 
 b               = 10;               % b-value (s*mm^-2)
 b_vector        = [10 50:50:1000];  % b-value vector (s*mm^-2)
 convertB        = b*1e6;            % b-value (s*m^-2)
 convertB_vector = b_vector*1e6;     % b-value vector (s*m^-2)
 
-% range of resolution in mm
-resINI = 2;  
-resNEW = [2:0.5:6];
+% ... range of resolution ... 
+resINI = 2;             % original resolution (mm)
+resNEW = [2:0.5:6];     % resolution vector (mm)
 
-% range of GMmax
+% ... range of GMmax ... 
 gmMaxVector  = [1 2:2:30]*1e-3;     % Maximum Amplitude (T/m)
 gmMax        = 0.030;               % Maximum Amplitude (T/m)
 
-% range of B0 fields for simulations
-B0       = [0.01 0.05 0.1 0.2 0.35 0.5 0.7 1 1.5];  % B0 in Tesla
-refB0init  = 1.5;                                   % B0 in Tesla
+% ... range of B0 fields for simulations ... 
+B0       = [0.01 0.05 0.1 0.2 0.35 0.5 0.7 1 1.5];  % B0 (T)
+refB0init  = 1.5;                                   % refB0 (T)
 
-% Load Tend Vector
+% ... Load Tend Vector ... 
 if (ratio == 0) && (seq == 'S')       % load Tend_vector_Spiral
     load('Tend_vector_1shot.mat') 
     plot_seq = 'Spiral';
@@ -83,13 +92,13 @@ elseif (ratio == 0) && (seq == 'E')   % load Tend_vector_EPI
     plot_seq = 'EPI';
 end
 
-% ADCs for each tissue
-D_CSF = 3.2*1e-3;   % Diffusivity of CSF (mm^2 refSNRinit* s^-1) - PhD Thesis Nunes R.G. - 
-D_GM  = 0.8*1e-3;   % Diffusivity of GM - PhD Thesis Nunes R.G. - 
-D_WM  = 0.7*1e-3;   % Diffusivity of WM - PhD Thesis Nunes R.G. - 
-D_LS  = 0.55*1e-3;  % Diffusivity of LS - Knight et. al, 2019 - DOI: 10.3233/bsi-190185
+% ... ADCs for each tissue ... 
+D_CSF = 3.2*1e-3;   % Diffusivity of CSF (mm^2 * s^-1) - Breger et. al, 1986 - DOI: 10.1002/mrm.1910030502 
+D_GM  = 0.8*1e-3;   % Diffusivity of GM  (mm^2 * s^-1) - Breger et. al, 1986 - DOI: 10.1002/mrm.1910030502 
+D_WM  = 0.7*1e-3;   % Diffusivity of WM  (mm^2 * s^-1) - Breger et. al, 1986 - DOI: 10.1002/mrm.1910030502 
+D_LS  = 0.55*1e-3;  % Diffusivity of LS  (mm^2 * s^-1) - Knight et. al, 2019 - DOI: 10.3233/bsi-190185
 
-% Counting the number of repetitions -N slices
+% ... Counting the number of repetitions -N slices ... 
 Z_size    = 120;    % dimention of the brain in zz axes (mm)
 
 % ... reference values for SNR study ...
@@ -109,6 +118,7 @@ tests    = 0;          % Tests for each variable that contribute to SNR
 
 %% 2 - initializing relaxation times field dependence
 % Longitudinal and transverse relaxation rates using the models presented
+% assuming LS occurs WM - Only ADC change
 % in:
 % - Rooney et al MRM 2007  - DOI: 10.1002/mrm.21122 ;
 % - Pohmann et al MRM 2016 - DOI: 10.1002/mrm.25677 ;
@@ -130,26 +140,27 @@ T2s_CSF = 0.1*ones(size(B0));
 
 
 %% 3 - Defining Functions:
-%       - Ernst Angle; 
-%       - GRE signal calculation;
+%       - Ernst Angle;
+%       - Longitudinal Steady-State signal calculation;
 %       - Diffusion calculation;
 %       - Echo Time (TE) for Spiral and partial EPI;
 
-% Ernst Angle Calculation in degrees
-Ernstangle_d = @(TRep,T1) acosd( exp(-TRep./T1) );
+% Ernst Angle Calculation (degrees)
+Ernstangle_d  = @(TRep,T1) acosd( exp(-TRep./T1) );
 
-% GRESignal calculation in degrees
-GRESignal    = @(FlipAngle,TRep,TE,T1,T2) sind(FlipAngle).*exp(-TE/T2).*(1-exp(-TRep/T1))./(1-(exp(-TRep/T1)).*cosd(FlipAngle));
+% Longitudinal Steady-State signal calculation given the flip angle in degrees
+LongSS_Signal = @(FlipAngle,TRep,TE,T1,T2) sind(FlipAngle).*exp(-TE/T2).*(1-exp(-TRep/T1))./(1-(exp(-TRep/T1)).*cosd(FlipAngle));
 
 % Diffusion signal calculation
-DWSignal     = @(b_value,ADC) exp(-b_value*ADC);
+DWSignal      = @(b_value,ADC) exp(-b_value*ADC);
 
 % Echo Time (TE) (s) for trapezoidical gradients and Spiral
-TE_time      = @(b_value,gmMax) ((12 .* b_value) ./ ((gamma.*2*pi).^2 * gmMax.^2)).^(1/3);
+TE_time       = @(b_value,gmMax) ((12 .* b_value) ./ ((gamma.*2*pi).^2 * gmMax.^2)).^(1/3);
 
 % Echo Time (TE) (s) for trapezoidical gradients and partial EPI
-aux_delta    = @(b_value,gmMax,part_Tend)   (  24*b_value*(gamma.*2*pi*gmMax).^4  - (gamma.*2*pi*gmMax).^6.*part_Tend.^3  +  4*sqrt(3)*sqrt(  12*b_value^2*(gamma.*2*pi*gmMax).^8 - b_value*(gamma.*2*pi*gmMax).^10.*part_Tend.^3  )  ).^(1/3);
-delta        = @(gmMax,part_Tend,aux_delta) (-part_Tend)/4  - ((1-1*i*sqrt(3))*(gamma.*2*pi*gmMax.*part_Tend).^2) ./ (8*aux_delta)  -  ((1-1*i*sqrt(3))*aux_delta) ./ (8*(gamma.*2*pi*gmMax).^2);
+% It follows the demonstration provided in the 'name.pdf' GITHUB folder 
+aux_delta     = @(b_value,gmMax,part_Tend)   (  24*b_value*(gamma.*2*pi*gmMax).^4  - (gamma.*2*pi*gmMax).^6.*part_Tend.^3  +  4*sqrt(3)*sqrt(  12*b_value^2*(gamma.*2*pi*gmMax).^8 - b_value*(gamma.*2*pi*gmMax).^10.*part_Tend.^3  )  ).^(1/3);
+delta         = @(gmMax,part_Tend,aux_delta) (-part_Tend)/4  - ((1-1*i*sqrt(3))*(gamma.*2*pi*gmMax.*part_Tend).^2) ./ (8*aux_delta)  -  ((1-1*i*sqrt(3))*aux_delta) ./ (8*(gamma.*2*pi*gmMax).^2);
 
 %% 4 - Select ref SNR expressions for EPI and for a value of SNR=40
 
@@ -157,41 +168,41 @@ SNR_B0ref     = B0(refB0idx).^SNR_PowerLaw;
 
 % TE reference with partial EPI - results from the derivation of the b-value formula
 percTrout     = 0.285714;                                               % percentage of time to get to the centre k_space
-T_endRef      = load('Tend_vector_EPI.mat');
+T_endRef      = load('Tend_vector_EPI.mat');                            % load reference Time of read out for partial EPI
 part_Tend_ref = percTrout*T_endRef.Tend_Vector(refgmMax,refRes)*1e-3;   % sequence readout time until k_space center in (s)
 auxD_ref      = aux_delta(convertB,gmMax,part_Tend_ref);                % auxiliar
 deltaEPI_ref  = delta(gmMax,part_Tend_ref,auxD_ref);                    % delta in (s)
-TE_B0ref      = 2*(part_Tend_ref+abs(deltaEPI_ref));                    % TE = delta + sequence readout until k_space center in (s)
+TE_B0ref      = 2*(part_Tend_ref+abs(deltaEPI_ref));                    % TE = 2 x (delta + sequence readout until k_space center) in (s)
 
-% TE reference with Spiral
-TTotal_B0ref  = Tend_Vector(refgmMax,refRes)*1e-3*(1-percTrout) + TE_B0ref;  % TR per slice
-TRo_B0ref     = Tend_Vector(refgmMax,refRes)*1e-3*(1-percTrout);             % Time of Read Out
+TTotal_B0ref  = T_endRef.Tend_Vector(refgmMax,refRes)*1e-3*(1-percTrout) + TE_B0ref;  % TR per slice in (s)
+TRo_B0ref     = T_endRef.Tend_Vector(refgmMax,refRes)*1e-3*(1-percTrout);             % Time of Read Out in (s)
 Nslic_ref     = Z_size/resNEW(refRes);                                       % Number of slices in reference
 
 clear part_Tend_ref auxD_ref deltaEPI_ref T_endRef
 
-BW_B0ref = 1 ./ TRo_B0ref;
-TR_B0ref = TTotal_B0ref * Nslic_ref;
+BW_B0ref = 1 ./ TRo_B0ref;                                          % Band-width for readout time at B0 ref
+TR_B0ref = TTotal_B0ref * Nslic_ref;                                % TR at B0 ref
 OptimumAlpha_GM_B0ref = Ernstangle_d(TR_B0ref,T1_GM(refB0idx));
 OptimumAlpha_WM_B0ref = Ernstangle_d(TR_B0ref,T1_WM(refB0idx));
 OptimumAlpha_LS_B0ref = Ernstangle_d(TR_B0ref,T1_LS(refB0idx));
 
+% References values for each tissue (GM, WM, LS) and its respective SNR
 % ... GM tissue ...
-GREs_GM_B0ref = GRESignal(OptimumAlpha_GM_B0ref,TR_B0ref,TE_B0ref,T1_GM(refB0idx),T2s_GM(refB0idx));
+LongSSs_GM_B0ref = LongSS_Signal(OptimumAlpha_GM_B0ref,TR_B0ref,TE_B0ref,T1_GM(refB0idx),T2s_GM(refB0idx));
 DWs_GM_B0ref  = DWSignal(b,D_GM);
-S_GM_B0ref    = GREs_GM_B0ref * DWs_GM_B0ref;
+S_GM_B0ref    = LongSSs_GM_B0ref * DWs_GM_B0ref;
 SNR_GM_ref    = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_GM_B0ref * (resNEW(refRes)/resINI)^3;
 
 % ... WM tissue ...
-GREs_WM_B0ref = GRESignal(OptimumAlpha_WM_B0ref,TR_B0ref,TE_B0ref,T1_WM(refB0idx),T2s_WM(refB0idx));
+LongSSs_WM_B0ref = LongSS_Signal(OptimumAlpha_WM_B0ref,TR_B0ref,TE_B0ref,T1_WM(refB0idx),T2s_WM(refB0idx));
 DWs_WM_B0ref  = DWSignal(b,D_WM);
-S_WM_B0ref    = GREs_WM_B0ref * DWs_WM_B0ref;
+S_WM_B0ref    = LongSSs_WM_B0ref * DWs_WM_B0ref;
 SNR_WM_ref    = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_WM_B0ref * (resNEW(refRes)/resINI)^3;
 
 % ... LS tissue ...
-GREs_LS_B0ref = GRESignal(OptimumAlpha_LS_B0ref,TR_B0ref,TE_B0ref,T1_LS(refB0idx),T2s_LS(refB0idx));
+LongSSs_LS_B0ref = LongSS_Signal(OptimumAlpha_LS_B0ref,TR_B0ref,TE_B0ref,T1_LS(refB0idx),T2s_LS(refB0idx));
 DWs_LS_B0ref  = DWSignal(b,D_LS);
-S_LS_B0ref    = GREs_LS_B0ref * DWs_LS_B0ref;
+S_LS_B0ref    = LongSSs_LS_B0ref * DWs_LS_B0ref;
 SNR_LS_ref    = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_LS_B0ref * (resNEW(refRes)/resINI)^3;
 
 
@@ -234,11 +245,11 @@ for bb = 1:size(B0,2)
             BW{bval,r}           = 1 ./ TRo{bval,r};
             
             % ... part 3 - Contribution of noise due to Signal Sequence (GM, WM & Lesion) ...
-            GRE_GM_SNRinit{bb,bval,r} = GRESignal(OptimumAlphaGM_SNRinit{bb,bval,r}, ...
+            LongSS_GM_SNRinit{bb,bval,r} = LongSS_Signal(OptimumAlphaGM_SNRinit{bb,bval,r}, ...
                                         TR{bval,r},TE{bval},T1_GM(bb),T2s_GM(bb));
-            GRE_WM_SNRinit{bb,bval,r} = GRESignal(OptimumAlphaWM_SNRinit{bb,bval,r}, ...
+            LongSS_WM_SNRinit{bb,bval,r} = LongSS_Signal(OptimumAlphaWM_SNRinit{bb,bval,r}, ...
                                         TR{bval,r},TE{bval},T1_WM(bb),T2s_WM(bb));
-            GRE_LS_SNRinit{bb,bval,r} = GRESignal(OptimumAlphaLS_SNRinit{bb,bval,r}, ...
+            LongSS_LS_SNRinit{bb,bval,r} = LongSS_Signal(OptimumAlphaLS_SNRinit{bb,bval,r}, ...
                                         TR{bval,r},TE{bval},T1_LS(bb),T2s_LS(bb));
             
             % ... part 4 - Contribution of noise due to Diffusion ...
@@ -247,9 +258,9 @@ for bb = 1:size(B0,2)
             DWs_LS_SNRinit = DWSignal(b_vector(bval),D_LS);
             
             % ... part 5 - Combining of signal and diffusion...
-            S_GM_SNRinit{bb,bval,r} = GRE_GM_SNRinit{bb,bval,r} .* DWs_GM_SNRinit;
-            S_WM_SNRinit{bb,bval,r} = GRE_WM_SNRinit{bb,bval,r} .* DWs_WM_SNRinit;
-            S_LS_SNRinit{bb,bval,r} = GRE_LS_SNRinit{bb,bval,r} .* DWs_LS_SNRinit;
+            S_GM_SNRinit{bb,bval,r} = LongSS_GM_SNRinit{bb,bval,r} .* DWs_GM_SNRinit;
+            S_WM_SNRinit{bb,bval,r} = LongSS_WM_SNRinit{bb,bval,r} .* DWs_WM_SNRinit;
+            S_LS_SNRinit{bb,bval,r} = LongSS_LS_SNRinit{bb,bval,r} .* DWs_LS_SNRinit;
             
             % ... part 5.5 - SNR for time unit & referenced to EPI clinical scanner ...
             if refScan == 1

@@ -1,12 +1,17 @@
-function [ bvals, bvecs, Nb0s] = generate_bvalsbvecs(bmax,Ndir,Nb,fsl_flag)
-% [ bvals, bvecs, Nb0s ] = generate_bvalsbvecs(bmax,Ndir,Nb,fsl_flag)
-% produce bvecs and bvals text files
-% Nb0s - define number of non-DWI volumes based on input Ndir
+function [ bvals, bvecs, Nb0s] = generate_bvalsbvecs(bmax, Ndir, Nb, fsl_flag)
+% Generates  bvecs and bvals text files required for running eddy and dtifit (FSL) 
+% usage: [ bvals, bvecs, Nb0s ] = generate_bvalsbvecs(bmax, Ndir, Nb, fsl_flag)
+% 
+% :parameters: bmax: maximum non-zero b-value in s/mm2 (optional - default 1000 s/mm2)
+% :parameters: Ndir: number of sampled gradient directions (3, 6 , 12 or 60; optional - default 3)
+% :parameters: Nb:   number of non-zero b-values (optional - default 1)
+% :parameters: fsl_flag: multiply y gradient component by -1 (optional - default 1)
 %
-% bmax - maximum non-zero b-value in s/mm2 (optional - default 1000 s/mm2)
-% Ndir - number of sampled gradient directions (optional - default 3)
-% Nb - number of non-zero b-values (optional - default 1)
-% fsl_flag - multiply y gradient component by -1 (optional - default 1)
+% :returns: bvals: vector containing list of b-values applied during each volume 
+%                  acquisition (b_1 b_2 ... b_n)
+% :returns: bvecs: vector containing list of b-vectors applied during each volume
+%                  acquisition (x_1 x_2 ... x_n;y_1 y_2 ... y_n;z_1 z_2 ... z_n)
+% :returns: Nb0s:  number of non-DWI volumes
 
 if nargin<4
     fsl_flag=1;

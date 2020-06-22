@@ -1,26 +1,27 @@
 function im_sos = recon_imgs(k, dimpars ,gc)
-%im_sos = recon_imgs(k, dimpars )
-%k: k-space data should already have been be loaded into Matlab
-%using a raw data reading function
-%compatible with the used MRI scanner's raw data structure
+% Perform basic image reconstruction, including EPI ghost correction, 
+% homodyne partial Fourier reconstruction and sum-of-squares coil
+% combination
 %
-%dimpars: structure containg data dimensions
-% dimpars.Nb0s - number of non-DWI volumes
-% dimpars.Nb - number of non-zero b-values
-% dimpars.Ndir - number of sampled gradient directions
-% dimpars.Nsl - number of slices
-% dimpars.PFourier - partial Fourier factor
+% usage: im_sos = recon_imgs(k, dimpars)
 %
-%multi-slice 2D data containing multiple volumes
-% assuming input k-space size is N x Nc x Nimg.N
-% N - matrix size (assuming square field-of-view)
-% Nc - number of coil channels
-% where N and Nc are estimated from the data and
-% Nvol - number of volumes (1 + Nb0s + Nb*Ǹdir)
-% the extra volume correponds to calibration data for EPI ghost-correction
-% Nimg - number of imgs + calibration data = Nvol * Nsl
-%
-%gc: flag for ghost correction - On by default
+% :parameters: k:  input k-space data which should already have been be loaded into Matlab
+%                  using a raw data reading function compatible with the used MRI scanner's raw data structure
+%                  data obtained using multi-slice 2D acquisition containing multiple volumes
+%                  assuming input k-space size is N x Nc x Nimg.N
+%                  N - matrix size (assuming square field-of-view)
+%                  Nc - number of coil channels
+%                  where N and Nc are estimated from the data and
+%                  Nvol - number of volumes (1 + Nb0s + Nb*Ǹdir)
+%                  the extra volume correponds to calibration data for EPI ghost-correction
+%                  Nimg - number of imgs + calibration data = Nvol * Nsl
+% :parameters: dimpars: structure containg data dimensions
+%                       dimpars.Nb0s: number of non-DWI volumes
+%                       dimpars.Nb:   number of non-zero b-values
+%                       dimpars.Ndir: number of sampled gradient directions
+%                       dimpars.Nsl:  number of slices
+%                       dimpars.PFourier - partial Fourier factor
+% :parameters: gc: flag for ghost correction - On by default
 N = size(k,1);
 Nc = size(k,2);
 

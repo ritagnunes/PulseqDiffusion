@@ -11,6 +11,22 @@ import math
 import numpy as np
 
 def get_dirs(ndirs):
+    """
+    Retrieves list of gradient directions and number of non\-DWI images.    
+    	
+    Parameters
+    ----------
+    ndirs : integer        
+            number of diffusion directions to sample
+
+    Returns
+    -------
+    g : numpy.ndarray
+	gradient components for each direction (gx,gy,gz)
+    nb0s: integer
+	  number of non\-DWI volumes to acquire
+
+    """
 
     if ndirs==3:
         g= np.array([[1, 0, 0],[0, 1, 0],[0, 0, 1]])
@@ -111,6 +127,32 @@ def get_dirs(ndirs):
     return g, nb0s
 
 def calc_bval(G, delta, Delta,gdiff_rt):
+    """
+    Calculates the achieved diffusion-weighting (b-value in s/mm2)
+    	
+    Parameters
+    ----------
+    G : float
+        amplitude of the diffusion gradient (Hz)
+
+    delta : float
+            duration of the diffusion gradients (s)
+
+    Delta : float
+            time between start of the first and second diffusion gradients (s)
+    
+    gdiff_rt : float
+               diffusion gradient ramp time (s)
+
+
+    Returns
+    -------
+    bval : float
+	   b-value in s/mm2
+
+    """
+
+
     bval= (2*math.pi*G)**2*((Delta-delta/3)*(delta**2)+(gdiff_rt**3)/30-delta*(gdiff_rt**2)/6)
 
     return bval

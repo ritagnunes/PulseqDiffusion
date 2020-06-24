@@ -1,17 +1,5 @@
-%% Read Me
-% 
-% by:
-% T.T. Fernandes, September 2019
-% LarSys - Instituto Superior T�cnico - Universidade de Lisboa
-%
-% name: aux_delta
-% type: Function
-% description: Auxiliar for calculation of delta for an EPI sequence
-%
-
-%%
 function [aDelta] = aux_delta(b_value,gmMax,part_Tend,gamma)
-%  Auxiliar function for calculation of delta for an EPI sequence (see 'delta.m' function & 'Calc_delta_EPI.pdf')
+% Auxiliar function for calculation of delta for an EPI sequence (see 'delta.m' function & 'Calc_delta_EPI.pdf')
 % by T.T. Fernandes, September 2019 - LarSys - Instituto Superior T�cnico - Universidade de Lisboa
 % usage: aDelta = aux_delta(b_value,gmMax,part_Tend,gamma)
 %

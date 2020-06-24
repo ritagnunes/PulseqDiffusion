@@ -1,26 +1,26 @@
-% SNR_CNR_Study_Simulation
+%% Read Me
 % 
 % by:
 % T.T. Fernandes, September 2019
-% LarSys - Instituto Superior Técnico - Universidade de Lisboa
+% LarSys - Instituto Superior T�cnico - Universidade de Lisboa
 %
-%
+% name: SNR_CNR_Study_Simulation
+% type: Script
 % description:
 % A tool for predicting the signal-to-noise ratio (SNR) observed for
-% different brain tissues (gray matter, white matter, cerebrospinal 
-% fluid - CSF) and the contrast-to-noise ratio (CNR) of an acute stroke
-% lesion relative to those tissues. The implemented code predicts the 
-% SNR and CNR per time unit for a spin-echo diffusion-weighted sequence, 
-% taking into account the steady-state value for the longitudinal
-% magnetization. For that purpose, we adapted an expression used to
-% predict the SNR per tissue per time unit for a spoiled gradient echo
-% sequence [1]. This simulation considers the possibility to use either
-% EPI or spiral readouts and considers the impact of: B0, max gradient
-% amplitude, spatial resolution and b-value (comparing the achieved SNR
-% with that of a typical 1.5T clinical scanner).
-%
+%   different brain tissues (gray matter, white matter, cerebrospinal 
+%   fluid - CSF) and the contrast-to-noise ratio (CNR) of an acute stroke
+%   lesion relative to those tissues. The implemented code predicts the 
+%   SNR and CNR per time unit for a spin-echo diffusion-weighted sequence, 
+%   taking into account the steady-state value for the longitudinal
+%   magnetization. For that purpose, we adapted an expression used to
+%   predict the SNR per tissue per time unit for a spoiled gradient echo
+%   sequence [6]. This simulation considers the possibility to use either
+%   EPI or spiral readouts and considers the impact of: B0, max gradient
+%   amplitude, spatial resolution and b-value (comparing the achieved SNR
+%   with that of a typical 1.5T clinical scanner).
 % Inspired in the function SNRandCNRfieldDependenceJMRI.m - from JP
-% Marques, 2019 - [1] DOI: 10.1002/jmri.26637
+%   Marques, 2019 - DOI: 10.1002/jmri.26637
 %
 % It loads two '.mat' files:
 %   'Tend_vector_1shot.mat' - vector of values for time of readout for a
@@ -44,27 +44,26 @@ clc
 tic
 
 %% 0 - Select values to visualize in the figures
-% Values for plot
 
-ratio = 0;
-if ratio == 0    
-    valuegmMax  = 0.026;   % value for plot - Max Gradient (T/m)
-    valueB      = 800;     % value for plot - b-value (s*mm^-2)
-    valueRes    = 2.5;     % value for plot - Resolution (mm)
-    valueB0     = 0.5;     % value for plot - B0 field (T)
-    % defaults
-    seq         = 'S';     % Choose sequence: 'S' - Spiral or 'E' - partial Echo Planar Imaging
-    percSNRinit = 1/40;    % value for colour bar relative to SNRinit = 40
-    sizeB0res   = 9;       % for resolution plots
-    logscale    = 0;       % Logorithmic scale = 1 or = 0 no log scale+
-    refScan     = 1;       % '1' - ref SNR & CNR values to EPI clinical Scanner (SNR_WM = 40 per time unit) or '0' - arbitary units
-end
+% Values for plot
+valuegmMax  = 0.016;   % value for plot - Max Gradient (T/m)
+valueB      = 400;     % value for plot - b-value (s*mm^-2)
+valueRes    = 2.5;     % value for plot - Resolution (mm)
+valueB0     = 0.05;     % value for plot - B0 field (T)
+
+% defaults
+seq         = 'S';     % Choose sequence: 'S' - Spiral or 'E' - partial Echo Planar Imaging
+percSNRinit = 1/40;    % value for colour bar relative to SNRinit = 40
+sizeB0res   = 9;       % for resolution plots
+logscale    = 0;       % Logorithmic scale = 1 or = 0 no log scale+
+refScan     = 1;       % '1' - ref SNR & CNR values to EPI clinical Scanner (SNR_WM = 40 per time unit) or '0' - arbitary units
+
 
 %% 1 - initializing variables
 
 % ... initial variables ... 
-gamma        = 42.577e6;     % gyromagnetic constant in Hz/T
-SNR_PowerLaw = 1.5;          % at high fields this has been measured at 1.68, at lower fields it is expected to tend towards 1 because noise in the sample
+gamma        = 42.577e6;     % gyromagnetic constant (Hz/T)
+SNR_PowerLaw = 1.5;          % Power law for the SNR, see JP Marques, 2019
 
 % ... range of b-value ... 
 b               = 10;               % b-value (s*mm^-2)
@@ -85,10 +84,10 @@ B0       = [0.01 0.05 0.1 0.2 0.35 0.5 0.7 1 1.5];  % B0 (T)
 refB0init  = 1.5;                                   % refB0 (T)
 
 % ... Load Tend Vector ... 
-if (ratio == 0) && (seq == 'S')       % load Tend_vector_Spiral
+if seq == 'S'       % load Tend_vector_Spiral
     load('Tend_vector_1shot.mat') 
     plot_seq = 'Spiral';
-elseif (ratio == 0) && (seq == 'E')   % load Tend_vector_EPI
+elseif seq == 'E'   % load Tend_vector_EPI
     load('Tend_vector_EPI.mat')
     plot_seq = 'EPI';
 end
@@ -140,44 +139,21 @@ T2s_LS = T2s_WM;
 T2s_CSF = 0.1*ones(size(B0));
 
 
-%% 3 - Defining Functions:
-%       - Ernst Angle;
-%       - Longitudinal Steady-State signal calculation;
-%       - Diffusion calculation;
-%       - Echo Time (TE) for Spiral and partial EPI;
-
-% Ernst Angle Calculation (degrees)
-Ernstangle_d  = @(TRep,T1) acosd( exp(-TRep./T1) );
-
-% Longitudinal Steady-State signal calculation given the flip angle in degrees
-LongSS_Signal = @(FlipAngle,TRep,TE,T1,T2) sind(FlipAngle).*exp(-TE/T2).*(1-exp(-TRep/T1))./(1-(exp(-TRep/T1)).*cosd(FlipAngle));
-
-% Diffusion signal calculation
-DWSignal      = @(b_value,ADC) exp(-b_value*ADC);
-
-% Echo Time (TE) (s) for trapezoidical gradients and Spiral
-TE_time       = @(b_value,gmMax) ((12 .* b_value) ./ ((gamma.*2*pi).^2 * gmMax.^2)).^(1/3);
-
-% Echo Time (TE) (s) for trapezoidical gradients and partial EPI
-% It follows the demonstration provided in the 'name.pdf' GITHUB folder 
-aux_delta     = @(b_value,gmMax,part_Tend)   (  24*b_value*(gamma.*2*pi*gmMax).^4  - (gamma.*2*pi*gmMax).^6.*part_Tend.^3  +  4*sqrt(3)*sqrt(  12*b_value^2*(gamma.*2*pi*gmMax).^8 - b_value*(gamma.*2*pi*gmMax).^10.*part_Tend.^3  )  ).^(1/3);
-delta         = @(gmMax,part_Tend,aux_delta) (-part_Tend)/4  - ((1-1*i*sqrt(3))*(gamma.*2*pi*gmMax.*part_Tend).^2) ./ (8*aux_delta)  -  ((1-1*i*sqrt(3))*aux_delta) ./ (8*(gamma.*2*pi*gmMax).^2);
-
-%% 4 - Select ref SNR expressions for EPI and for a value of SNR=40
+%% 3 - Select ref SNR expressions for partial EPI and for a value of SNR=40
 
 SNR_B0ref     = B0(refB0idx).^SNR_PowerLaw;
 
 % TE reference with partial EPI - results from the derivation of the b-value formula
-percTrout     = 0.285714;                                               % percentage of time to get to the centre k_space
+percTrout     = 0.285714;                                               % percentage of time to get to the centre k_space due to partial EPI
 T_endRef      = load('Tend_vector_EPI.mat');                            % load reference Time of read out for partial EPI
 part_Tend_ref = percTrout*T_endRef.Tend_Vector(refgmMax,refRes)*1e-3;   % sequence readout time until k_space center in (s)
-auxD_ref      = aux_delta(convertB,gmMax,part_Tend_ref);                % auxiliar
-deltaEPI_ref  = delta(gmMax,part_Tend_ref,auxD_ref);                    % delta in (s)
+auxD_ref      = aux_delta(convertB,gmMax,part_Tend_ref,gamma);          % auxiliar
+deltaEPI_ref  = delta(gmMax,part_Tend_ref,auxD_ref,gamma);              % delta in (s)
 TE_B0ref      = 2*(part_Tend_ref+abs(deltaEPI_ref));                    % TE = 2 x (delta + sequence readout until k_space center) in (s)
 
 TTotal_B0ref  = T_endRef.Tend_Vector(refgmMax,refRes)*1e-3*(1-percTrout) + TE_B0ref;  % TR per slice in (s)
 TRo_B0ref     = T_endRef.Tend_Vector(refgmMax,refRes)*1e-3*(1-percTrout);             % Time of Read Out in (s)
-Nslic_ref     = Z_size/resNEW(refRes);                                       % Number of slices in reference
+Nslic_ref     = Z_size/resNEW(refRes);                                                % Number of slices in reference
 
 clear part_Tend_ref auxD_ref deltaEPI_ref T_endRef
 
@@ -207,7 +183,7 @@ S_LS_B0ref    = LongSSs_LS_B0ref * DWs_LS_B0ref;
 SNR_LS_ref    = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_LS_B0ref * (resNEW(refRes)/resINI)^3;
 
 
-%% 5 - variation of SNR for B0, gm, Nslices, res, b_value ...
+%% 4 - variation of SNR for B0, gm, Nslices, res, b_value ...
 
 clear TE TTotal TR BW SNR_B0_SNRinit SNR_SE_GM SNR_SE_WM SNR_SE_LS TRo CNR_SE_GM_LS ...
       SNR_SE_WM CNR_SE_WM_LS S_GM_SNRinit S_WM_SNRinit S_LS_SNRinit 
@@ -219,24 +195,24 @@ for bb = 1:size(B0,2)
     for bval=1:size(b_vector,2)
         for r=1:size(resNEW,2)
             % ... Auxiliar Calculus ...
-            if (seq == 'S')        % calculate TE accordingly to Spiral
-                TE{bval}       = TE_time(convertB_vector(bval),gmMaxVector);      % TE per gm
-                TTotal{bval,r} = Tend_Vector(:,r)'*1e-3 + TE{bval};               % TR per slice for each gm
-                TRo{bval,r}    = Tend_Vector(:,r)'*1e-3;                          % Time of Read Out
-            elseif (seq == 'E')    % calculate TE accordingly to EPI
-                part_Tend      = percTrout*Tend_Vector(:,r)'*1e-3;                % sequence readout time until k_space center in (s)
-                auxD           = aux_delta(convertB_vector(bval),gmMaxVector,part_Tend); % auxiliar
-                deltaEPI       = delta(gmMaxVector,part_Tend,auxD);               % delta in (s)
-                TE{bval}       = 2*(part_Tend+abs(deltaEPI));                     % TE = delta + sequence readout until k_space center in (s)
-                TTotal{bval,r} = Tend_Vector(:,r)'*1e-3*(1-percTrout) + TE{bval};  % TR per slice for each gm
-                TRo{bval,r}    = Tend_Vector(:,r)'*1e-3*(1-percTrout);             % Time of Read Out
+            if (seq == 'S')       % calculate TE accordingly to Spiral
+                TE{bval}       = TE_time(convertB_vector(bval),gmMaxVector,gamma);   % TE per gm in (s)
+                TTotal{bval,r} = Tend_Vector(:,r)'*1e-3 + TE{bval};                  % TR per slice for each gm in (s)
+                TRo{bval,r}    = Tend_Vector(:,r)'*1e-3;                             % Time of Readout in (s)
+            elseif (seq == 'E')   % calculate TE accordingly to partial EPI
+                part_Tend      = percTrout*Tend_Vector(:,r)'*1e-3;                   % sequence readout time until k_space center in (s)
+                auxD           = aux_delta(convertB_vector(bval),gmMaxVector,part_Tend,gamma); % auxiliar
+                deltaEPI       = delta(gmMaxVector,part_Tend,auxD,gamma);            % delta in (s)
+                TE{bval}       = 2*(part_Tend+abs(deltaEPI));                        % TE = delta + sequence readout until k_space center in (s)
+                TTotal{bval,r} = Tend_Vector(:,r)'*1e-3*(1-percTrout) + TE{bval};    % TR per slice for each gm in (s)
+                TRo{bval,r}    = Tend_Vector(:,r)'*1e-3*(1-percTrout);               % Time of Readout in (s)
             end
             Nslices(r)     = Z_size/resNEW(r);
             
             % ... part 2 - calculation variables ...            
-            TR{bval,r}           = TTotal{bval,r}' .* Nslices(r);           % TR for each slice
-            TE{bval}             = ones(size(TR{bval,r})).*TE{bval}';       % TE per gm by size of TR
-            TTotal{bval,r}       = ones(size(TR{bval,r})).*TTotal{bval,r}'; % TTotal per gm by size of TR
+            TR{bval,r}           = TTotal{bval,r}' .* Nslices(r);           % TR for each slice in (s)
+            TE{bval}             = ones(size(TR{bval,r})).*TE{bval}';       % TE per gm by size of TR in (s)
+            TTotal{bval,r}       = ones(size(TR{bval,r})).*TTotal{bval,r}'; % TTotal per gm by size of TR in (s)
             
             OptimumAlphaGM_SNRinit{bb,bval,r}  = Ernstangle_d(TR{bval,r},T1_GM(bb));
             OptimumAlphaWM_SNRinit{bb,bval,r}  = Ernstangle_d(TR{bval,r},T1_WM(bb));
@@ -300,7 +276,7 @@ for bb = 1:size(B0,2)
 end
 
 
-%% pre_6 - cut the top right figure of the gm plots vs SNR & vs CNR
+%% pre_5 - cut the top right figure of the gm plots vs SNR & vs CNR
 aux_Cut = [1 9; 2 11; 3 13; 4 15];
 gm_idxMax = size(gmMaxVector,2);
 
@@ -315,7 +291,7 @@ for uu=1:size(aux_Cut,1)
 end
 
 
-%% 6 - SNR plots for a reference SNR for each Condition of B0
+%% 5 - SNR plots for a reference SNR for each Condition of B0
 % Using the relationship SNR_new / SNR_ref = (B0new/B0ref)^b
 
 plotgmMax  = find(round(gmMaxVector,3)==round(valuegmMax,3)); % gmMax   = 31 mT/m
@@ -571,7 +547,7 @@ lgd.FontSize = 20;
 lgd.LineWidth = 4;
     
     
-%% 7 - auxiliar (Plots for CNR)
+%% 6 - auxiliar (Plots for CNR)
 if logscale == 1
     % ... Plot Matrices of CNR for gmax & TE ...
     fCNR_gmMax_Contrast = figure('name',['logscale - CNR (SE - ',plot_seq,') variation w/ Gm Max (Diffusion) - b_value=', ...
@@ -745,7 +721,7 @@ grid on
 lgd = legend('GM-LS Contrast','WM-LS Contrast');
 lgd.FontSize = 20;
 
-%% Paper Figure 5: plot for SNR & CNR variation with b-value
+%% 7 - Paper Figure 5: plot for SNR & CNR variation with b-value
 
 if logscale == 1
 
@@ -865,7 +841,7 @@ elseif logscale == 0
     
 end
 
-%% Paper Figure 5: Plots WM - SNR & CNR (WM-LS) - gm, res
+%% 8 - Paper Figure 5: Plots WM - SNR & CNR (WM-LS) - gm, res
 
 if logscale == 1
     % SNR WM - gm

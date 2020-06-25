@@ -1,6 +1,6 @@
 function [TE_spiral] = TE_time(b_value,gmMax,gamma)
 % Echo Time (TE) (s) for a Spiral sequence
-% by T.T. Fernandes, September 2019 - LarSys - Instituto Superior T�cnico - Universidade de Lisboa
+% by T.T. Fernandes, September 2019 - LarSys - Instituto Superior Tecnico - Universidade de Lisboa
 % usage: TE_spiral = TE_time(b_value,gmMax,gamma)
 %
 % :parameters: b_value: b-value in s*mm^-2

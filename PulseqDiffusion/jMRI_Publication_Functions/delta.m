@@ -1,6 +1,6 @@
 function [DELTA] = delta(gmMax,part_Tend,aux_delta,gamma)
 % Delta for TE in (s) for an EPI sequence. It follows the demonstration provided in the 'Calc_delta_EPI.pdf' GITHUB folder .
-% by T.T. Fernandes, September 2019 - LarSys - Instituto Superior T�cnico - Universidade de Lisboa
+% by T.T. Fernandes, September 2019 - LarSys - Instituto Superior Tecnico - Universidade de Lisboa
 % usage: DELTA = delta(gmMax,part_Tend,aux_delta,gamma)
 %
 % :parameters: gmMax: Gradient maximum amplitude in T/m

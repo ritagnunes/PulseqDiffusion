@@ -1,6 +1,6 @@
 function [SS_Signal] = LongSS_Signal(FlipAngle,TRep,TE,T1,T2)
 % Longitudinal Steady-State signal calculation given the flip angle in degrees
-% by T.T. Fernandes, September 2019 - LarSys - Instituto Superior T�cnico - Universidade de Lisboa
+% by T.T. Fernandes, September 2019 - LarSys - Instituto Superior Tecnico - Universidade de Lisboa
 % usage:SS_Signal = LongSS_Signal(FlipAngle,TRep,TE,T1,T2)
 %
 % :parameters: FlipAngle: Flip angle in degrees

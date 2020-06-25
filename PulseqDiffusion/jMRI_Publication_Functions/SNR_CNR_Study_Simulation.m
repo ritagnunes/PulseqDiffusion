@@ -2,7 +2,7 @@
 % 
 % by:
 % T.T. Fernandes, September 2019
-% LarSys - Instituto Superior T�cnico - Universidade de Lisboa
+% LarSys - Instituto Superior Tecnico - Universidade de Lisboa
 %
 % name: SNR_CNR_Study_Simulation
 % type: Script

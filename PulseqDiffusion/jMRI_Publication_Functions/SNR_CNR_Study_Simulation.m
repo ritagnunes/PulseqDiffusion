@@ -8,19 +8,19 @@
 % type: Script
 % description:
 % A tool for predicting the signal-to-noise ratio (SNR) observed for
-%   different brain tissues (gray matter, white matter, cerebrospinal 
-%   fluid - CSF) and the contrast-to-noise ratio (CNR) of an acute stroke
-%   lesion relative to those tissues. The implemented code predicts the 
-%   SNR and CNR per time unit for a spin-echo diffusion-weighted sequence, 
-%   taking into account the steady-state value for the longitudinal
-%   magnetization. For that purpose, we adapted an expression used to
-%   predict the SNR per tissue per time unit for a spoiled gradient echo
-%   sequence [6]. This simulation considers the possibility to use either
-%   EPI or spiral readouts and considers the impact of: B0, max gradient
-%   amplitude, spatial resolution and b-value (comparing the achieved SNR
-%   with that of a typical 1.5T clinical scanner).
-% Inspired in the function SNRandCNRfieldDependenceJMRI.m - from JP
-%   Marques, 2019 - DOI: 10.1002/jmri.26637
+% different brain tissues (gray matter, white matter, cerebrospinal 
+% fluid - CSF) and the contrast-to-noise ratio (CNR) of an acute stroke
+% lesion relative to those tissues. The implemented code predicts the 
+% SNR and CNR per time unit for a spin-echo diffusion-weighted sequence, 
+% taking into account the steady-state value for the longitudinal
+% magnetization. For that purpose, we adapted an expression used to
+% predict the SNR per tissue per time unit for a spoiled gradient echo
+% sequence (Marques, JP et al, 2019). This simulation considers the possibility to use either
+% EPI or spiral readouts and considers the impact of: B0, max gradient
+% amplitude, spatial resolution and b-value (comparing the achieved SNR
+% with that of a typical 1.5T clinical scanner).
+% Inspired in the function SNRandCNRfieldDependenceJMRI.m 
+% from Marques, JP 2019 - DOI: 10.1002/jmri.26637
 %
 % It loads two '.mat' files:
 %   'Tend_vector_1shot.mat' - vector of values for time of readout for a

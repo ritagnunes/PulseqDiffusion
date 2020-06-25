@@ -1,6 +1,6 @@
 function [aDelta] = aux_delta(b_value,gmMax,part_Tend,gamma)
 % Auxiliar function for calculation of delta for an EPI sequence (see 'delta.m' function & 'Calc_delta_EPI.pdf')
-% by T.T. Fernandes, September 2019 - LarSys - Instituto Superior T�cnico - Universidade de Lisboa
+% by T.T. Fernandes, September 2019 - LarSys - Instituto Superior Tecnico - Universidade de Lisboa
 % usage: aDelta = aux_delta(b_value,gmMax,part_Tend,gamma)
 %
 % :parameters: b_value: b-value in s*mm^-2

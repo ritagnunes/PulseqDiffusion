@@ -1,50 +1,31 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Aug  1 14:09:08 2019
-
-@author: rgnunes
-"""
-
-import math
-
+import unittest
 import numpy as np
+import diff_funcs as difunc
 
-def get_dirs(ndirs):
-    """
-    Retrieves list of gradient directions and number of non\-DWI images.    
-    	
-    Parameters
-    ----------
-    ndirs : integer        
-            number of diffusion directions to sample
+class TestGetDirs(unittest.TestCase):
+    def test_getdirs1(self):
+        ndirs=3
+        gutest, nb0s = difunc.get_dirs(ndirs)
+        gpred = np.array([[1, 0, 0],[0, 1, 0],[0, 0, 1]])
+        self.assertEqual(nb0s, 1)
+        np.testing.assert_allclose(gpred, gutest)
 
-    Returns
-    -------
-    g : numpy.ndarray
-	gradient components for each direction (gx,gy,gz)
-    nb0s: integer
-	  number of non\-DWI volumes to acquire
-
-    """
-
-    if ndirs==3:
-        g= np.array([[1, 0, 0],[0, 1, 0],[0, 0, 1]])
-        nb0s= 1
-    elif ndirs==6:
-        g= np.zeros((3, ndirs))        
-        #obtained using gen_scheme (mrtrix)
-        g= np.array([[-0.283341,  -0.893706,  -0.347862],
+    def test_getdirs2(self):
+        ndirs=6
+        gutest, nb0s = difunc.get_dirs(ndirs)
+        gpred = np.array([[-0.283341,  -0.893706,  -0.347862],
                      [-0.434044,   0.799575,  -0.415074],
                      [0.961905,    0.095774,   0.256058],
                      [-0.663896,   0.491506,   0.563616],
                      [-0.570757,  -0.554998,   0.605156],
                      [-0.198848,  -0.056534,  -0.978399]])
-        nb0s= 1
-    elif ndirs==12:
-        g= np.zeros((3, ndirs))        
-        #obtained using gen_scheme (mrtrix)
-        g= np.array([[ 0.648514,   0.375307,   0.662249],
+        self.assertEqual(nb0s, 1)
+        np.testing.assert_allclose(gpred, gutest)
+
+    def test_getdirs3(self):
+        ndirs=12
+        gutest, nb0s = difunc.get_dirs(ndirs)
+        gpred = np.array([[ 0.648514,   0.375307,   0.662249],
                      [-0.560493,   0.824711,   0.075496],
                      [-0.591977,  -0.304283,   0.746307],
                      [-0.084472,  -0.976168,   0.199902],
@@ -56,11 +37,13 @@ def get_dirs(ndirs):
                      [0.729809,    0.673235,  -0.118882],
                      [0.698325,   -0.455759,   0.551929],
                      [-0.325340,   0.489774,   0.808873]])
-        nb0s=1
-    elif ndirs == 60:
-        g = np.zeros((3, ndirs))
-        # obtained using gen_scheme (mrtrix)
-        g = np.array([[-0.811556,  0.245996, -0.529964],
+        self.assertEqual(nb0s, 1)
+        np.testing.assert_allclose(gpred, gutest)
+
+    def test_getdirs4(self):
+        ndirs=60
+        gutest, nb0s = difunc.get_dirs(ndirs)
+        gpred = np.array([[-0.811556,  0.245996, -0.529964],
                       [-0.576784, -0.313126,  0.754502],
                       [-0.167946, -0.899364, -0.403655],
                       [0.755699, -0.512113,     -0.408238],
@@ -120,40 +103,15 @@ def get_dirs(ndirs):
                       [0.089001,   0.716134,   0.692265],
                       [-0.714965, - 0.648438,   0.261444],
                       [0.076308,   0.420804, - 0.903936]])
-        nb0s= 3
-    else:
-        print("Gradient scheme not defined for ", ndirs,"Using default value of 3")
-        g = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-        nb0s= 1
-    return g, nb0s
+        self.assertEqual(nb0s, 3)
+        np.testing.assert_allclose(gpred, gutest)
 
-def calc_bval(G, delta, Delta,gdiff_rt):
-    """
-    Calculates the achieved diffusion-weighting (b-value in s/mm2)
-    	
-    Parameters
-    ----------
-    G : float
-        amplitude of the diffusion gradient (Hz)
+    def test_getdirs5(self):
+        ndirs=10
+        gutest, nb0s = difunc.get_dirs(ndirs)
+        gpred = np.array([[1, 0, 0],[0, 1, 0],[0, 0, 1]])
+        self.assertEqual(nb0s, 1)
+        np.testing.assert_allclose(gpred, gutest)
 
-    delta : float
-            duration of the diffusion gradients (s)
-
-    Delta : float
-            time between start of the first and second diffusion gradients (s)
-    
-    gdiff_rt : float
-               diffusion gradient ramp time (s)
-
-
-    Returns
-    -------
-    bval : float
-	   b-value in s/mm2
-
-    """
-
-
-    bval= (2*math.pi*G)**2*((Delta-delta/3)*(delta**2)+(gdiff_rt**3)/30-delta*(gdiff_rt**2)/6)
-
-    return bval
+if __name__ == '__main__':
+    unittest.main()

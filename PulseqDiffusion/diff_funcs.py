@@ -3,7 +3,7 @@
 """
 Created on Thu Aug  1 14:09:08 2019
 
-@author: rgnunes
+@authors: Rita G. Nunes, Oscar Pena-Nogales 
 """
 
 import math
@@ -142,7 +142,6 @@ def calc_bval(G, delta, Delta, gdiff_rt):
             duration of the diffusion gradients (s)
     Delta : float
             time between start of the first and second diffusion gradients (s)
-
     gdiff_rt : float
                diffusion gradient ramp time (s)
     Returns
@@ -159,29 +158,29 @@ def calc_bval(G, delta, Delta, gdiff_rt):
 
 def calc_exact_bval(waveform, INV, short_f, seq):
     """
-        Calculates the achieved exact diffusion-weighting (b-value in s/mm2)
+    Calculates the achieved exact diffusion-weighting (b-value in s/mm2)
 
-        Parameters
-        ----------
-        waveform : numpy.ndarray
-            diffusion weighting gradient waveform
+    Parameters
+    ----------
+    waveform : numpy.ndarray
+               diffusion weighting gradient waveform
 
-        INV : numpy.ndarray
-            array indicating whether the elements of waveform is in phase or in opposite phase compared to the
-            beginning of the sequence (phase +1, opposite phase -1).
+    INV : numpy.ndarray
+          array indicating whether the elements of waveform is in phase or in opposite phase compared to the
+          beginning of the sequence (phase +1, opposite phase -1).
 
-        short_f : int
-            Shortening factor to speed up compuation of the b-value.
-            Higher values will short the time resolution of the waveform.
+    short_f : int
+              shortening factor to speed up compuation of the b-value.
+              higher values will short the time resolution of the waveform.
 
-        seq : sequence
-            sequence
+    seq : sequence
+          sequence
 
-        Returns
-        -------
-        bval : float
-    	   b-value in s/mm2
-        """
+    Returns
+    -------
+    bval : float
+           b-value in s/mm2
+    """
 
     # These following lines might crush due to system overload - too large matrix C.
     # Compared to function 'calc_bval' this computes the exact b-value depending on the diffusion weighting gradient waveform.
@@ -201,38 +200,38 @@ def calc_exact_bval(waveform, INV, short_f, seq):
     bval = (2 * math.pi) ** 2 * np.matmul(np.matmul(np.transpose(F), C2), F) * short_f * seq.grad_raster_time * 1e-6  # [s/mm2]
     return bval
 
+
 def opt_TE_bv_SE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
     """
-    Obtain optimal TE and diffusion-weighting gradient waveform for an standard spin echo (SE) DW sequence.
+    Obtain optimal TE and diffusion-weighting gradient waveforms for twice-refocued spin echo (TRSE) DW sequence.
 
     Parameters
     ----------
     bvalue_Dict : dictionary
-        b-value related parameters needed in the TE optimization.
+                  b-value related parameters needed in the TE optimization.
 
     grads_times_Dict : dictionary
-        gradient times related parameters needed in the TE optimization.
+                       gradient times related parameters needed in the TE optimization.
 
     seq_sys_Dict : dictionary
-        sequence and system related parameters needed in the TE optimization.
+                   sequence and system related parameters needed in the TE optimization.
 
     Returns
     -------
     n_TE : int
 	   echo time in integers units.
 
-	bval : float
-       b-value in s/mm2
+    bval : float
+           b-value in s/mm2
 
     gdiff : pypulseq gradient
-	   diffusion-weighting gradient waveform.
+	    diffusion-weighting gradient waveform.
 
-	n_delay_te1 : int
-	   delay between RF90 and RF180 in integers units.
+    n_delay_te1 : int
+	          delay between RF90 and RF180 in integers units.
 
-	n_delay_te2 : int
-	   delay between RF180 and EPI readout in integers units.
-
+    n_delay_te2 : int
+	          delay between RF180 and EPI readout in integers units.
     """
 
     # Description
@@ -308,44 +307,44 @@ def opt_TE_bv_SE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
 
 def opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
     """
-        Obtain optimal TE and diffusion-weighting gradient waveform for an standard spin echo (SE) DW sequence.
+    Obtain optimal TE and diffusion-weighting gradient waveforms for twice-refocued spin echo (TRSE) DW sequence.
 
-        Parameters
-        ----------
-        bvalue_Dict : dictionary
-            b-value related parameters needed in the TE optimization.
+    Parameters
+    ----------
+    bvalue_Dict : dictionary
+                  b-value related parameters needed in the TE optimization.
 
-        grads_times_Dict : dictionary
-            gradient times related parameters needed in the TE optimization.
+    grads_times_Dict : dictionary
+                       gradient times related parameters needed in the TE optimization.
 
-        seq_sys_Dict : dictionary
-            sequence and system related parameters needed in the TE optimization.
+    seq_sys_Dict : dictionary
+                   sequence and system related parameters needed in the TE optimization.
 
-        Returns
-        -------
-        TE : float
-    	   echo time (s).
+    Returns
+    -------
+    TE : float
+       	 echo time (s).
 
-    	bval : float
-           b-value in s/mm2
+    bval : float
+     	   b-value in s/mm2
 
-        waveform : float
-    	   diffusion-weighting gradient waveform.
+    waveform : float
+               diffusion-weighting gradient waveform.
 
-    	gscl_max : float
-            gradient scale factor of the diffusion-weighting gradient waveform.
+    gscl_max : float
+               gradient scale factor of the diffusion-weighting gradient waveform.
 
-    	d1 : float
-    	   duration of the first diffusion-weighting gradient lobe between the RF90 and the first RF180 (s).
+    d1 : float
+         duration of the first diffusion-weighting gradient lobe between the RF90 and the first RF180 (s).
 
-        d2 : float
-           duration of the second diffusion-weighting gradient lobe after the first RF180 (s).
+    d2 : float
+         duration of the second diffusion-weighting gradient lobe after the first RF180 (s).
 
-        d3 : float
-    	   duration of the third diffusion-weighting gradient lobe before the second RF180 (s).
+    d3 : float
+         duration of the third diffusion-weighting gradient lobe before the second RF180 (s).
 
-        d4 : float
-    	   duration of the last diffusion-weighting gradient lobe after the second RF180 (s).
+    d4 : float
+         duration of the last diffusion-weighting gradient lobe after the second RF180 (s).
     """
 
 

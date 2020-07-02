@@ -34,12 +34,17 @@ ADC=zeros(N2,Nsl,Ndir);
 img=reshape(img,[N2,Nsl,Nb0s+Nb*Ndir]);
 
 for s=1:Nsl
-    for ii=1:N2
-        if mask(ii)>0
-            for d=1:Ndir
-                sig=squeeze(img(ii,s,[1:Nb0s,(Nb0s+d):Ndir:size(img,3)]))';
-                [~,m,~]=regression(b,log(sig));
-                ADC(ii,s,d)=-m;
+    for d=1:Ndir
+        imgd=squeeze(img(:,s,[1:Nb0s,(Nb0s+d):Ndir:size(img,3)]));
+        parfor ii=1:N2
+            if mask(ii)>0           
+                sig=imgd(ii,:)';
+                if size(sig,2)>2
+                    [~,m,~]=regression(b,log(sig));
+                    ADC(ii,s,d)=-m;
+                else
+                    ADC(ii,s,d)= (log(sig(1))-log(sig(2)))/bmax;
+                end
             end
         end
     end

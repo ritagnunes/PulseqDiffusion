@@ -30,7 +30,8 @@ import matplotlib.pyplot as plt
 
 # Create new Sequence Object
 seq = Sequence()
-# This code is old, and we do not work with integer times 'n', it would be convenient to update it.
+
+# Note in this code we do not work on integer times 'n'.
 
 # Acquisition Parameters
 # FOV and resolution
@@ -119,20 +120,11 @@ adc = make_adc(num_samples=Nx, duration=readout_time,
 pre_time = 1e-3
 gx_pre = make_trapezoid(channel='x', system=system, area=-gx.area / 2, duration=pre_time)
 gz_reph = make_trapezoid(channel='z', system=system, area=-gz.area / 2, duration=pre_time)
-gy_pre = make_trapezoid(channel='y', system=system, area=-(Ny / 2 - 0.5 - (Ny - Nyeff)) * delta_k, duration=pre_time) # Es -0.5 y no +0.5 porque hay que pensar en areas, no en rayas!
+gy_pre = make_trapezoid(channel='y', system=system, area=-(Ny / 2 - 0.5 - (Ny - Nyeff)) * delta_k, duration=pre_time)
 
 # Phase blip in shortest possible time
 gy = make_trapezoid(channel='y', system=system, area=delta_k)
 dur = math.ceil(calc_duration(gy) / seq.grad_raster_time) * seq.grad_raster_time
-
-"""" Obtain TE and diffusion-weighting gradient waveform """
-# For S&T monopolar waveforms
-# From an initial TE, check we satisfy all constraints -> otherwise increase TE.
-# Once all constraints are okay -> check b-value, if it is lower than the target one -> increase TE
-# Finally, with TRSE low b-values can not be acquired, thus proper scaling is needed.
-# Looks time-inefficient but it is fast enough to make it user-friendly.
-# TODO: Add ramps to the waveforms to compure the b-values more accurately.
-# TODO: Re-scale the waveform to the exact b-value because increasing the TE might produce slightly higher ones.
 
 # Calculate some times constant throughout the process
 # The time(gy) refers to the number of blips, thus we substract 0.5 since the number of lines is always even.
@@ -141,228 +133,25 @@ duration_center = (calc_duration(gx)*(Ny/2 + 0.5 - (Ny - Nyeff)) + dur * (Ny/2 -
 rf_center_with_delay = rf.delay + calc_rf_center(rf)[0]
 rf180_center_with_delay = rf180.delay + calc_rf_center(rf180)[0]
 
-# Find minimum TE considering the readout times and RF + spoil gradient durations
-TE = 80e-3  # [s]
-delay_tela = -1 # Large TE/2
-while delay_tela <= 0:
-    TE = TE + 0.02e-3  # [ms]
-    delay_tela = math.ceil((TE / 2 + (- calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_2) - \
-                       duration_center ) + (- calc_duration(gz) + rf_center_with_delay - \
-                       pre_time - calc_duration(gz_spoil_1) - rf180_center_with_delay)) / seq.grad_raster_time) * seq.grad_raster_time
+# Group variables
+seq_sys_Dict = {"seq" : seq,
+           "system" : system}
 
-# Sice there are 3 equations and 4 parameters (TGReese2002 - https://doi.org/10.1002/mrm.10308)
-# One parameter can be tuned, while the other 3 are then fixed. This is why we fix d4.
-d4 = 3e-3  # [ms]
+grads_times_Dict = {"rf180" : rf180,
+           "rf180_center_with_delay" : rf180_center_with_delay,
+           "rf_center_with_delay" : rf_center_with_delay,
+           "gz_spoil_1": gz_spoil_1,
+           "gz_spoil_2" : gz_spoil_2,
+           "gz" : gz,
+           "duration_center" : duration_center,
+           "pre_time": pre_time}
 
-# Find minimum TE for the target d4
-# Waveform Ramp time
-gdiff_rt = math.ceil(system.max_grad / system.max_slew / seq.grad_raster_time) * seq.grad_raster_time
-d1 = -1
-while d1 <= 2 * gdiff_rt: # Include this condition to have trapepoids everywhere
-    TE = TE + 2 * seq.grad_raster_time  # [ms]
-    # Large TE/2
-    delay_tela = math.ceil((TE / 2 + (- calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_2) - \
-                          duration_center) + (- calc_duration(gz) + rf_center_with_delay - \
-                        pre_time - calc_duration(gz_spoil_1) - rf180_center_with_delay)) / seq.grad_raster_time) * seq.grad_raster_time
-    # Short TE/2 (Time between RF180s)
-    delay_tes = math.ceil((TE / 2 - calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_1) - \
-                           calc_duration(gz_spoil_2) - rf180_center_with_delay) / seq.grad_raster_time) * seq.grad_raster_time
+bvalue_Dict = {"bvalue" : bvalue,
+               "nbvals" : nbvals,
+               "gscl" : gscl}
 
-    d1 = math.ceil((delay_tela - d4) / seq.grad_raster_time) * seq.grad_raster_time
-
-# Find minimum TE for the target b-value
-bvalue_tmp = 0
-# We initially substract 2 times the raster time because we don't know if will achieve the desired b-value from the beginning.
-# Because we would not need to increase the TE.
-# Note that for low b-values, the TE is the same for all of them due to the large number of elements of this sequence.
-TE = TE - 2*seq.grad_raster_time
-while bvalue_tmp < np.max(bvalue):
-    # The following scalar multiplication is just to increase speed
-    TE = TE + int(math.ceil(np.max(bvalue)/500)) * 4 * seq.grad_raster_time  # [ms]
-
-    # Large TE/2
-    delay_tela = math.ceil((TE / 2 + (- calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_2) - \
-                          duration_center) + (- calc_duration(gz) + rf_center_with_delay - \
-                        pre_time - calc_duration(gz_spoil_1) - rf180_center_with_delay)) / seq.grad_raster_time) * seq.grad_raster_time
-    # Short TE/2 (Time between RF180s)
-    delay_tes = math.ceil((TE / 2 - calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_1) - \
-                           calc_duration(gz_spoil_2) - rf180_center_with_delay) / seq.grad_raster_time) * seq.grad_raster_time
-
-    d1 = math.ceil((delay_tela - d4) / seq.grad_raster_time) * seq.grad_raster_time
-    d3 = math.ceil(((d1 + delay_tes - d4) / 2) / seq.grad_raster_time) * seq.grad_raster_time
-    d2 = math.ceil((delay_tes - d3) / seq.grad_raster_time) * seq.grad_raster_time
-
-    # Due to the complexity of the sequence and that I have not found its b-value, I implement it by its definition.
-    # However, for simplicity I compute them as ideal rectangular pulses.
-
-    # d1 start after the RF90
-    n1 = int(math.ceil((calc_duration(gz) - rf_center_with_delay + pre_time + seq.grad_raster_time) / seq.grad_raster_time) * seq.grad_raster_time/seq.grad_raster_time)
-    nd1 = int(math.ceil(d1 / seq.grad_raster_time) * seq.grad_raster_time/seq.grad_raster_time)
-
-    # d2 start after the first RF180
-    n2 = int(math.ceil(((n1 + nd1)*seq.grad_raster_time + 2 * calc_duration(gz_spoil_1) + calc_duration(rf180) + seq.grad_raster_time ) / seq.grad_raster_time) * seq.grad_raster_time/seq.grad_raster_time)
-    nd2 = int(math.ceil(d2 / seq.grad_raster_time) * seq.grad_raster_time/seq.grad_raster_time)
-
-    # d3 starts after d2
-    n3 = int(math.ceil(((n2 + nd2)*seq.grad_raster_time + seq.grad_raster_time) / seq.grad_raster_time) * seq.grad_raster_time/seq.grad_raster_time)
-    nd3 = int(math.ceil(d3 / seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
-
-    # d4 starts after the second RF180
-    n4 = int(math.ceil(((n2 + nd2 + nd3)*seq.grad_raster_time + 2 * calc_duration(gz_spoil_2) + calc_duration(rf180) + seq.grad_raster_time) / seq.grad_raster_time) * seq.grad_raster_time/seq.grad_raster_time)
-    nd4 = int(math.ceil(d4 / seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
-
-    # Due to the large TE of TRSE and the high resolution we might need to shrink the following array.
-    # To speed up computation we calculate the b-value with short_f times lower of the time resolution.
-    # Shortening factor:
-    short_f = 5
-    n = int(np.ceil(TE / seq.grad_raster_time)/short_f)
-    waveform = np.zeros(n)
-
-    # Compose waveform
-    waveform[math.ceil(n1/short_f):math.floor((n1 + nd1 + 1)/short_f)] = system.max_grad
-    waveform[math.ceil(n2/short_f):math.floor((n2 + nd2 + 1)/short_f)] = -system.max_grad
-    waveform[math.ceil(n3/short_f):math.floor((n3 + nd3 + 1)/short_f)] = system.max_grad
-    waveform[math.ceil(n4/short_f):math.floor((n4 + nd4 + 1)/short_f)] = -system.max_grad
-
-    # Include ramps
-    nrt = int(math.floor(math.floor(system.max_grad / system.max_slew / seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time / short_f))
-    ramp_values = np.linspace(1, nrt, nrt) * seq.grad_raster_time * system.max_slew * short_f
-    # d1
-    if n1 % short_f == 0:
-        waveform[math.ceil(n1 / short_f):math.ceil(n1 / short_f) + nrt] = ramp_values
-    else:
-        waveform[math.ceil(n1/short_f):math.ceil((n1 + 1)/short_f) + nrt] = ramp_values
-
-    waveform[math.ceil((n1 + nd1 - 1)/short_f - nrt):math.ceil((n1 + nd1 - 1) / short_f)] = np.flip(ramp_values)
-
-    # d2
-    if n2 % short_f == 0:
-        waveform[math.ceil(n2 / short_f):math.ceil(n2 / short_f) + nrt] = -ramp_values
-    else:
-        waveform[math.ceil(n2 / short_f):math.ceil((n2 + 1) / short_f) + nrt] = -ramp_values
-
-    waveform[math.ceil((n2 + nd2 - 1) / short_f - nrt):math.ceil((n2 + nd2 - 1) / short_f)] = -np.flip(ramp_values)
-
-    # d3
-    if n3 % short_f == 0:
-        waveform[math.ceil(n3 / short_f):math.ceil(n3 / short_f) + nrt] = ramp_values
-    else:
-        waveform[math.ceil(n3 / short_f):math.ceil((n3 + 1) / short_f) + nrt] = ramp_values
-
-    waveform[math.ceil((n3 + nd3 - 1) / short_f - nrt):math.ceil((n3 + nd3 - 1) / short_f)] = np.flip(ramp_values)
-
-    # d4
-    if n4 % short_f == 0:
-        waveform[math.ceil(n4 / short_f):math.ceil(n4 / short_f) + nrt] = -ramp_values
-    else:
-        waveform[math.ceil(n4 / short_f):math.ceil((n4 + 1) / short_f) + nrt] = -ramp_values
-
-    waveform[math.ceil((n4 + nd4 - 1) / short_f - nrt):math.ceil((n4 + nd4 - 1) / short_f)] = -np.flip(ramp_values)
-
-    # Prepare Integral
-    nRF180_1 = int(math.ceil((n2 * seq.grad_raster_time - calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_1))/short_f/ seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
-    nRF180_2 = int(math.ceil((n4 * seq.grad_raster_time - calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_2))/short_f/ seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
-    INV = np.ones(n)
-    INV[nRF180_1:nRF180_2+1] = -1
-
-    C = np.tril(np.ones([n, n]))
-    C2 = np.matmul(np.transpose(C), C)
-
-    F = waveform * INV * short_f * seq.grad_raster_time
-    bv = (2*math.pi)**2 * np.matmul(np.matmul(np.transpose(F), C2), F) * short_f * seq.grad_raster_time
-    bvalue_tmp = bv * 1e-6  # [s/mm2]
-
-print("b-value low time resolution:", round(bvalue_tmp, 2), "s/mm2")
-# To now the exact b-value - repeat the above with full time resolution
-short_f = 1
-n = int(np.ceil(TE / seq.grad_raster_time)/short_f)
-waveform = np.zeros(n)
-
-# Compose waveform
-waveform[math.ceil(n1/short_f):math.floor((n1 + nd1 + 1)/short_f)] = system.max_grad
-waveform[math.ceil(n2/short_f):math.floor((n2 + nd2 + 1)/short_f)] = -system.max_grad
-waveform[math.ceil(n3/short_f):math.floor((n3 + nd3 + 1)/short_f)] = system.max_grad
-waveform[math.ceil(n4/short_f):math.floor((n4 + nd4 + 1)/short_f)] = -system.max_grad
-
-# Include ramps
-nrt = int(math.floor(math.floor(system.max_grad / system.max_slew / seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time / short_f))
-ramp_values = np.linspace(0, nrt, nrt) * seq.grad_raster_time * system.max_slew * short_f
-# d1
-if n1 % short_f == 0:
-    waveform[math.ceil(n1 / short_f):math.ceil(n1 / short_f) + nrt] = ramp_values
-else:
-    waveform[math.ceil(n1/short_f):math.ceil((n1 + 1)/short_f) + nrt] = ramp_values
-
-if (n1 + nd1) % short_f == 0:
-    waveform[math.ceil((n1 + nd1)/short_f - nrt) + 1:math.floor((n1 + nd1 + 1)/short_f)] = np.flip(ramp_values)
-else:
-    waveform[math.ceil((n1 + nd1) / short_f - nrt):math.floor((n1 + nd1 + 1) / short_f)] = np.flip(ramp_values)
-
-# d2
-if n2 % short_f == 0:
-    waveform[math.ceil(n2 / short_f):math.ceil(n2 / short_f) + nrt] = -ramp_values
-else:
-    waveform[math.ceil(n2 / short_f):math.ceil((n2 + 1) / short_f) + nrt] = -ramp_values
-
-if (n2 + nd2) % short_f == 0:
-    waveform[math.ceil((n2 + nd2) / short_f - nrt) + 1:math.floor((n2 + nd2 + 1)/short_f)] = -np.flip(ramp_values)
-else:
-    waveform[math.ceil((n2 + nd2) / short_f - nrt):math.floor((n2 + nd2 + 1) / short_f)] = -np.flip(ramp_values)
-
-# d3
-if n3 % short_f == 0:
-    waveform[math.ceil(n3 / short_f):math.ceil(n3 / short_f) + nrt] = ramp_values
-else:
-    waveform[math.ceil(n3 / short_f):math.ceil((n3 + 1) / short_f) + nrt] = ramp_values
-
-if (n3 + nd3) % short_f == 0:
-    waveform[math.ceil((n3 + nd3) / short_f - nrt) + 1:math.floor((n3 + nd3 + 1)/short_f)] = np.flip(ramp_values)
-else:
-    waveform[math.ceil((n3 + nd3) / short_f - nrt):math.floor((n3 + nd3 + 1) / short_f)] = np.flip(ramp_values)
-
-# d4
-if n4 % short_f == 0:
-    waveform[math.ceil(n4 / short_f):math.ceil(n4 / short_f) + nrt] = -ramp_values
-else:
-    waveform[math.ceil(n4 / short_f):math.ceil((n4 + 1) / short_f) + nrt] = -ramp_values
-
-if (n4 + nd4) % short_f == 0:
-    waveform[math.ceil((n4 + nd4) / short_f - nrt) + 1:math.floor((n4 + nd4 + 1)/short_f)] = -np.flip(ramp_values)
-else:
-    waveform[math.ceil((n4 + nd4) / short_f - nrt):math.floor((n4 + nd4 + 1) / short_f)] = -np.flip(ramp_values)
-
-# Prepare Integral
-nRF180_1 = int(math.ceil((n2 * seq.grad_raster_time - calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_1))/short_f/ seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
-nRF180_2 = int(math.ceil((n4 * seq.grad_raster_time - calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_2))/short_f/ seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
-INV = np.ones(n)
-INV[nRF180_1:nRF180_2+1] = -1
-
-# These following lines might crush due to system overload - too large matrix
-# In that case:
-# 1) Reduce b-value to decrease TE
-# 2) Omit the computation of the b-value with full time resolution.
-# 3) Run code in a better computer
-C = np.tril(np.ones([n, n]))
-C2 = np.matmul(np.transpose(C), C)
-
-F = waveform * INV * short_f * seq.grad_raster_time
-bv = (2*math.pi)**2 * np.matmul(np.matmul(np.transpose(F), C2), F) * short_f * seq.grad_raster_time
-bvalue_tmp = bv * 1e-6  # [s/mm2]
-print("b-value high time resolution:", round(bvalue_tmp, 2), "s/mm2")
-
-# Scale gradients amplitude accordingly.
-if bvalue_tmp > np.max(bvalue):
-    gscl_max = np.sqrt(np.max(bvalue) / bvalue_tmp)
-else:
-    gscl_max = 1
-
-# Show final TE and b-values:
-print("Final times:")
-print("TE:", round(TE*1e3, 2), "ms")
-for bv in range(1, nbvals+1):
-    F = waveform * gscl_max * gscl[bv] * INV * short_f * seq.grad_raster_time
-    bv = (2 * math.pi) ** 2 * np.matmul(np.matmul(np.transpose(F), C2), F) * short_f * seq.grad_raster_time * 1e-6  # [s/mm2]
-    print(round(bv, 2), "s/mm2")
+# Optimize TE for the desired b-value for the TRSE sequence
+TE, bvalue_tmp, waveform, gscl_max, d1, d2, d3, d4 = difunc.opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict)
 
 # Crusher gradients
 gx_crush = make_trapezoid(channel='x', area=2 * Nx * delta_k, system=system)

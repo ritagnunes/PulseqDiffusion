@@ -34,13 +34,13 @@ from pypulseq.add_gradients import add_gradients
 # Create new Sequence Object
 seq = Sequence()
 # Due to the floating point uncertainty (https://docs.python.org/3/tutorial/floatingpoint.html),
-# sometimes I'm having trouble when '* seq.grad_raster_time',  it returns number like:
-# 0.005560000000000001 which give me problems afterwards. However, such problem is solved if I used a manually inputed
+# sometimes we are having trouble with '* seq.grad_raster_time', because it returns numbers like:
+# 0.005560000000000001 which give problems afterwards. However, such problem is solved if we use a manually inputed
 # raster time (1/100000). To see this problem do: 556*1e-5 vs 556/1e5. Thus, whenever we have to multiply we divide
 # by the equivalent (100000)
 
-# I'm still getting some problems, so the best option to avoid them is to work with integers and only use the actual
-# timings by the end. Thus making all intermediate operations (+ and -) with n.
+# The best option to avoid this problem is to work with integers and only use the actual
+# timings by the end. Thus making all intermediate timing operations (+ and -) with integers n.
 
 i_raster_time = 100000
 # I need to check the manually inputed inverse raster time and the actual value are the same.
@@ -116,7 +116,7 @@ rf180, gz180, _ = make_sinc_pulse(flip_angle=math.pi, system=system, duration=5e
 rf180.phase_offset = math.pi/2
 gz_spoil = make_trapezoid(channel='z', system=system, area=6/slice_thickness, duration=3e-3)
 
-"""" Define other gradients and ADC events """
+# Define other gradients and ADC events
 # Gx Without ramp sampling
 delta_k = 1 / fov
 k_width = Nx * delta_k
@@ -130,14 +130,11 @@ dur = math.ceil(calc_duration(gy) / seq.grad_raster_time) / i_raster_time
 
 extra_area = dur / 2 * dur / 2 * system.max_slew
 
-""" Obtain the minimum readout time with a fixed maximum gradient intensity and min dwell time"""
+# Obtain the minimum readout time with a fixed maximum gradient intensity and min dwell time
 condition = False
 while not condition:
     try:
         gx = make_trapezoid(channel='x', system=system, area=k_width + extra_area, duration=readout_time + dur)
-        # We control the ruduction factor manually. I don't know if the readout gradients ever in practice achieve the
-        # max amplitude of the gradients. Also, an increase on the amplitude of the gx produces a decrease of the
-        # adc_dwell time. However, I don't know if there is a limit for that value either.
         if gx.amplitude < 0.5 * system.max_grad:
             condition = True
         else:
@@ -146,34 +143,24 @@ while not condition:
         readout_time = math.ceil(readout_time / seq.grad_raster_time + 1) / i_raster_time
 
 # Actual Area
-# Para los desplazamientos por el k-spacio mientras se lee solo hay que considerar el area normal (sin extra),
-# por ello, al haber calculado el gradiente con el area extra, esta hay que reducirla para muestrear en los sitios
-# deseados.
-
-# Lo unico, que ahora el area es ligeramente superior porque en el primer paso calculo el area extra con el
-# system.max_slew y despues lo resto con el slew rate real (gx.amplitude / gx.rise_time), lo que deja un pelin mas de
-# area
 actual_area = gx.area - gx.amplitude / gx.rise_time * dur / 2 * dur / 2 / 2 - gx.amplitude / gx.fall_time * dur / 2 * dur / 2 / 2
 gx.amplitude = gx.amplitude / actual_area * k_width
 gx.area = gx.amplitude * (gx.flat_time + gx.rise_time / 2 + gx.fall_time / 2)
 gx.flat_area = gx.amplitude * gx.flat_time
 
 # Update number of samples and ADC sampling rate (increase receiver bandwidth) to maintain the FOV.
-adc_samples = math.ceil(readout_time / dwell_time / 4) * 4  # Apparently, on Siemens the number of samples needs to be divisible by 4...
+adc_samples = math.ceil(readout_time / dwell_time / 4) * 4  # On Siemens the number of samples needs to be divisible by 4.
 adc = make_adc(num_samples=adc_samples, system=system, dwell=dwell_time, delay=dur / 2)
 
 # Center the sampling where needed - This is needed due to the new sampling rate
-# To align odd and even readouts. However, on the real hardware this misalignment is
+# to align odd and even readouts. However, on the real hardware this misalignment is
 # much stronger due to the gradient delays -> thus we can not achieve perfect matching.
 time_to_center = dwell_time * (adc_samples - 1) / 2
-adc.delay = np.floor((gx.rise_time + gx.flat_time / 2 - time_to_center) * 1e6) / 1e6  # For some reason is has to be multiple of the rf_raster_time....
+adc.delay = np.floor((gx.rise_time + gx.flat_time / 2 - time_to_center) * 1e6) / 1e6  # It has to be multiple of the rf_raster_time....
 
 # Split Gy to put half on each consecutive Gx and produce a combined synthetic gradient
 gy_parts = split_gradient_at(grad=gy, time_point=dur / 2, system=system)
 gy_blipup, gy_blipdown, _ = align('right', gy_parts[0], 'left', gy_parts[1], gx)
-# Incluir la siguiente linea se queremos que las muestras esten centradas y no queremos que las ultimas se monten con
-# la activacion dl gy. - Aunque una mejor opcion es cambiar la forma del blip partido para que ocupe un instante menos
-# de tiempo manteniendo el mismo area.
 gy_blipup.delay = math.ceil(gy_blipup.delay / system.grad_raster_time - 1) / i_raster_time
 gy_blipdownup = add_gradients([gy_blipdown, gy_blipup], system=system)
 assert math.ceil(calc_duration(gy_blipdownup) / system.grad_raster_time) == math.ceil(calc_duration(gy_blipup) / system.grad_raster_time), \
@@ -186,22 +173,9 @@ pre_time = 1e-3
 n_pre_time = math.ceil(pre_time * i_raster_time)
 gx_pre = make_trapezoid(channel='x', system=system, area=-gx.area / 2, duration=pre_time)
 gz_reph = make_trapezoid(channel='z', system=system, area=-gz.area / 2, duration=pre_time)
-gy_pre = make_trapezoid(channel='y', system=system, area=-(Ny / 2 - 0.5 - (Ny - Nyeff)) * delta_k, duration=pre_time) # Es -0.5 y no +0.5 porque hay que pensar en areas, no en rayas!
+gy_pre = make_trapezoid(channel='y', system=system, area=-(Ny / 2 - 0.5 - (Ny - Nyeff)) * delta_k, duration=pre_time)
 
-"""" Obtain TE and diffusion-weighting gradient waveform """
-# For S&T monopolar waveforms
-# From an initial TE, check we satisfy all constraints -> otherwise increase TE.
-# Once all constraints are okay -> check b-value, if it is lower than the target one -> increase TE
-# Looks time-inefficient but it is fast enough to make it user-friendly.
-
-# Calculate some times constant throughout the process
-# We need to compute the exact time sequence. For the normal SE-MONO-EPI sequence micro second differences
-# are not important, however, if we wanna import external gradients the allocated time for them needs to
-# be the same, and thus exact timing is mandatory. With this in mind, we establish the following rounding rules:
-# Duration of RFs + spoiling, and EPI time to the center of the k-space is always math.ceil().
-
-# El time(gy) se refiere a los numeros de blips por lo que se resta 0.5 ya que se asume que el numero de lineas Ny es par.
-# El time(gx) se refiere a lo que tarda en leer cada linea del k-space. Por lo que si tenemos Ny par, se tarda la mitad de lineas mas media (0.5)
+# Integer times needed for TE optimization
 n_duration_center = math.ceil((calc_duration(gx)*(Ny/2 + 0.5 - (Ny - Nyeff)) + calc_duration(gx_pre, gy_pre)) / seq.grad_raster_time)
 rf_center_with_delay = rf.delay + calc_rf_center(rf)[0]
 
@@ -209,45 +183,27 @@ n_rf90r = math.ceil((calc_duration(gz) - rf_center_with_delay + pre_time) / seq.
 n_rf180r = math.ceil((calc_duration(rf180) + 2 * calc_duration(gz_spoil)) / 2 / seq.grad_raster_time)
 n_rf180l = math.floor((calc_duration(rf180) + 2 * calc_duration(gz_spoil)) / 2 / seq.grad_raster_time)
 
-# Find minimum TE considering the readout times.
-n_TE = math.ceil(40e-3 / seq.grad_raster_time)
-n_delay_te2 = -1
-while n_delay_te2 <= 0:
-    n_TE = n_TE + 2
+# Group variables
+seq_sys_Dict = {"seq" : seq,
+           "system" : system,
+           "i_raster_time" : i_raster_time}
 
-    n_tINV = math.floor(n_TE / 2)
-    n_delay_te2 = n_tINV - n_rf180r - n_duration_center
+grads_times_Dict = {"n_rf90r" : n_rf90r,
+           "n_rf180r" : n_rf180r,
+           "n_rf180l" : n_rf180l,
+           "gz_spoil" : gz_spoil,
+           "gz180" : gz180,
+           "n_duration_center" : n_duration_center}
 
-# Find minimum TE for the target b-value
-bvalue_tmp = 0
-while bvalue_tmp < np.max(bvalue):
-    n_TE = n_TE + 2
+bvalue_Dict = {"bvalue" : bvalue,
+               "nbvals" : nbvals,
+               "gscl" : gscl}
 
-    n_tINV = math.floor(n_TE / 2)
-    n_delay_te1 = n_tINV - n_rf90r - n_rf180l
-    delay_te1 = n_delay_te1 / i_raster_time
-    n_delay_te2 = n_tINV - n_rf180r - n_duration_center
-    delay_te2 = n_delay_te2 / i_raster_time
+# Optimie TE for the desired b-value
+n_TE, bval, gdiff, n_delay_te1, n_delay_te2 = difunc.opt_TE_bv_SE(bvalue_Dict, grads_times_Dict, seq_sys_Dict)
 
-    # Waveform Ramp time
-    n_gdiff_rt = math.ceil(system.max_grad / system.max_slew / seq.grad_raster_time)
-
-    # Select the shortest available time
-    n_gdiff_delta = min(n_delay_te1, n_delay_te2)
-    n_gdiff_Delta = n_delay_te1 + 2 * math.ceil(calc_duration(gz_spoil) / seq.grad_raster_time) + math.ceil(calc_duration(gz180) / seq.grad_raster_time)
-
-    gdiff = make_trapezoid(channel='x', system=system, amplitude=system.max_grad, duration=n_gdiff_delta / i_raster_time)
-
-    # delta only corresponds to the rectangle.
-    n_gdiff_delta = n_gdiff_delta - 2 * n_gdiff_rt
-
-    bv = difunc.calc_bval(system.max_grad, n_gdiff_delta / i_raster_time, n_gdiff_Delta / i_raster_time, n_gdiff_rt / i_raster_time)
-    bvalue_tmp = bv * 1e-6
-
-# Show final TE and b-values:
-print("TE:", round(n_TE / i_raster_time * 1e3, 2), "ms")
-for bv in range(1, nbvals+1):
-    print(round(difunc.calc_bval(system.max_grad * gscl[bv], n_gdiff_delta / i_raster_time, n_gdiff_Delta / i_raster_time, n_gdiff_rt / i_raster_time) * 1e-6, 2), "s/mm2")
+delay_te2 = n_delay_te2 / i_raster_time
+delay_te1 = n_delay_te1 / i_raster_time
 
 # Crusher gradients
 gx_crush = make_trapezoid(channel='x', area=2 * Nx * delta_k, system=system)

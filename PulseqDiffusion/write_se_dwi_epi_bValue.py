@@ -32,16 +32,16 @@ from pypulseq.Sequence.sequence import Sequence
 # Create new Sequence Object
 seq = Sequence()
 # Due to the floating point uncertainty (https://docs.python.org/3/tutorial/floatingpoint.html),
-# sometimes I'm having trouble when '* seq.grad_raster_time',  it returns number like:
-# 0.005560000000000001 which give me problems afterwards. However, such problem is solved if I used a manually inputed
+# sometimes we are having trouble with '* seq.grad_raster_time', because it returns numbers like:
+# 0.005560000000000001 which give problems afterwards. However, such problem is solved if we use a manually inputed
 # raster time (1/100000). To see this problem do: 556*1e-5 vs 556/1e5. Thus, whenever we have to multiply we divide
 # by the equivalent (100000)
 
-# The best option to avoid problem is to work with integers and only use the actual
-# timings by the end. Thus making all intermediate operations (+ and -) with integers n.
+# The best option to avoid this problem is to work with integers and only use the actual
+# timings by the end. Thus making all intermediate timing operations (+ and -) with integers n.
 
 i_raster_time = 100000
-# I need to check the manually inputed inverse raster time and the actual value are the same.
+# Need to check the manually inputed inverse raster time and the actual value are the same.
 assert 1/i_raster_time == seq.grad_raster_time, "Manualy inputed inverse raster time does not match the actual value."
 
 # Acquisition Parameters
@@ -68,7 +68,7 @@ TR = 5000e-3  # [s]
 n_TR = math.ceil(TR * i_raster_time)
 
 # Save seq
-save_flag = False
+save_flag = True
 
 # Fat saturation
 fatsat_enable = 0
@@ -129,24 +129,13 @@ pre_time = 1e-3
 n_pre_time = math.ceil(pre_time * i_raster_time)
 gx_pre = make_trapezoid(channel='x', system=system, area=-gx.area / 2, duration=pre_time)
 gz_reph = make_trapezoid(channel='z', system=system, area=-gz.area / 2, duration=pre_time)
-gy_pre = make_trapezoid(channel='y', system=system, area=-(Ny / 2 - 0.5 - (Ny - Nyeff)) * delta_k, duration=pre_time) # Es -0.5 y no +0.5 porque hay que pensar en areas, no en rayas!
+gy_pre = make_trapezoid(channel='y', system=system, area=-(Ny / 2 - 0.5 - (Ny - Nyeff)) * delta_k, duration=pre_time)
 
 # Phase blip in shortest possible time
 gy = make_trapezoid(channel='y', system=system, area=delta_k)
 dur = math.ceil(calc_duration(gy) / seq.grad_raster_time) / i_raster_time
 
-"""" Obtain TE and diffusion-weighting gradient waveform """
-# For S&T monopolar waveforms
-# From an initial TE, check we satisfy all constraints -> otherwise increase TE.
-# Once all constraints are okay -> check b-value, if it is lower than the target one -> increase TE
-# Looks time-inefficient but it is fast enough to make it user-friendly.
-
-# Calculate some time constant throughout the process
-# We need to compute the exact time sequence. For the normal SE-MONO-EPI sequence micro second differences
-# are not important, however, if we wanna import external gradients the allocated time for them needs to
-# be the same, and thus exact timing is mandatory. With this in mind, we establish the following rounding rules:
-# Duration of RFs + spoiling, and EPI time to the center of the k-space is always math.ceil().
-
+# Integer times needed for TE optimization
 # The time(gy) refers to the number of blips, thus we substract 0.5 since the number of lines is always even.
 # The time(gx) refers to the time needed to read each line of the k-space. Thus, if Ny is even, it would take half of the lines plus another half.
 n_duration_center = math.ceil((calc_duration(gx)*(Ny/2 + 0.5 - (Ny - Nyeff)) + dur * (Ny/2 - 0.5 - (Ny - Nyeff)) + calc_duration(gx_pre, gy_pre)) / seq.grad_raster_time)
@@ -156,45 +145,27 @@ n_rf90r = math.ceil((calc_duration(gz) - rf_center_with_delay + pre_time) / seq.
 n_rf180r = math.ceil((calc_duration(rf180) + 2 * calc_duration(gz_spoil)) / 2 / seq.grad_raster_time)
 n_rf180l = math.floor((calc_duration(rf180) + 2 * calc_duration(gz_spoil)) / 2 / seq.grad_raster_time)
 
-# Find minimum TE considering the readout times.
-n_TE = math.ceil(40e-3 / seq.grad_raster_time)
-n_delay_te2 = -1
-while n_delay_te2 <= 0:
-    n_TE = n_TE + 2
+# Group variables
+seq_sys_Dict = {"seq" : seq,
+           "system" : system,
+           "i_raster_time" : i_raster_time}
 
-    n_tINV = math.floor(n_TE / 2)
-    n_delay_te2 = n_tINV - n_rf180r - n_duration_center
+grads_times_Dict = {"n_rf90r" : n_rf90r,
+           "n_rf180r" : n_rf180r,
+           "n_rf180l" : n_rf180l,
+           "gz_spoil" : gz_spoil,
+           "gz180" : gz180,
+           "n_duration_center" : n_duration_center}
 
-# Find minimum TE for the target b-value
-bvalue_tmp = 0
-while bvalue_tmp < np.max(bvalue):
-    n_TE = n_TE + 2
+bvalue_Dict = {"bvalue" : bvalue,
+               "nbvals" : nbvals,
+               "gscl" : gscl}
 
-    n_tINV = math.floor(n_TE / 2)
-    n_delay_te1 = n_tINV - n_rf90r - n_rf180l
-    delay_te1 = n_delay_te1 / i_raster_time
-    n_delay_te2 = n_tINV - n_rf180r - n_duration_center
-    delay_te2 = n_delay_te2 / i_raster_time
+# Optimize TE for the desired b-value
+n_TE, bval, gdiff, n_delay_te1, n_delay_te2 = difunc.opt_TE_bv_SE(bvalue_Dict, grads_times_Dict, seq_sys_Dict)
 
-    # Waveform Ramp time
-    n_gdiff_rt = math.ceil(system.max_grad / system.max_slew / seq.grad_raster_time)
-
-    # Select the shortest available time
-    n_gdiff_delta = min(n_delay_te1, n_delay_te2)
-    n_gdiff_Delta = n_delay_te1 + 2 * math.ceil(calc_duration(gz_spoil) / seq.grad_raster_time) + math.ceil(calc_duration(gz180) / seq.grad_raster_time)
-
-    gdiff = make_trapezoid(channel='x', system=system, amplitude=system.max_grad, duration=n_gdiff_delta / i_raster_time)
-
-    # delta only corresponds to the rectangle.
-    n_gdiff_delta = n_gdiff_delta - 2 * n_gdiff_rt
-
-    bv = difunc.calc_bval(system.max_grad, n_gdiff_delta / i_raster_time, n_gdiff_Delta / i_raster_time, n_gdiff_rt / i_raster_time)
-    bvalue_tmp = bv * 1e-6
-
-# Show final TE and b-values:
-print("TE:", round(n_TE / i_raster_time * 1e3, 2), "ms")
-for bv in range(1, nbvals+1):
-    print(round(difunc.calc_bval(system.max_grad * gscl[bv], n_gdiff_delta / i_raster_time, n_gdiff_Delta / i_raster_time, n_gdiff_rt / i_raster_time) * 1e-6, 2), "s/mm2")
+delay_te2 = n_delay_te2 / i_raster_time
+delay_te1 = n_delay_te1 / i_raster_time
 
 # Crusher gradients
 gx_crush = make_trapezoid(channel='x', area=2 * Nx * delta_k, system=system)

@@ -38,7 +38,7 @@ for s=1:Nsl
         imgd=squeeze(img(:,s,[1:Nb0s,(Nb0s+d):Ndir:size(img,3)]));
         parfor ii=1:N2
             if mask(ii)>0           
-                sig=imgd(ii,:)';
+                sig=imgd(ii,:);
                 if size(sig,2)>2
                     [~,m,~]=regression(b,log(sig));
                     ADC(ii,s,d)=-m;

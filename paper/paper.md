@@ -61,26 +61,6 @@ We also expect `PulseqDiffusion` to be a useful starting point for sequence deve
 Together with the Python functions required to generate DWI sequences, we provide a tool for simulating the performance of different sequence variants considering a range of hardware solutions [@fernandes2020snr]. This tool predicts the signal-to-noise ratio (SNR) observed for different brain tissues (gray matter, white matter, cerebrospinal fluid - CSF) and the contrast-to-noise ratio (CNR) of an acute stroke lesion relative to those tissues, and can be found in jMRI_Publication_Functions. The implemented code predicts the SNR and CNR per time unit for a spin-echo diffusion-weighted sequence, taking into account the steady-state value for the longitudinal magnetization. For that purpose, we adapted an expression used to predict the SNR per tissue per time unit for a spoiled gradient echo sequence [@marques2019lowfield]. This simulation considers the possibility to use either EPI or spiral readouts and considers the impact of: B0, maximum gradient amplitude, spatial resolution and level of diffusion-weighting (comparing the achieved SNR with that of a typical 1.5T clinical scanner).
 
 We provide Python scripts for generating example diffusion-weighted EPI sequences including single-spin echo preparation (with and without ramp-sampling during signal readout) and a doubly-refocused preparation module [@reese2013tre] as shown below: 
-
-![Example diffusion-weighted EPI sequence using a twice-refocused preparation module for 1 slice measuring diffusion along the readout direction using a b-value of 500 s/mm^2. The gradient waveforms applied along all three directions are shown above while the signal acquisition (ADC) and RF pulse waveforms are shown below.](tre_seq.png)
-
-The sets of diffusion gradient directions considered for pulse sequence implementation were optimised using MRtrix3 (https://www.mrtrix.org/, [@tournier2019mrtrix]). 
-
-We provide example data as well as Matlab functions for basic reconstruction and image processing. Phantom images reconstructed from the provided example k-space data, including four different levels of diffusion-weighting along three orthogonal directions, as well as the corresponding apparent diffusion coefficient (ADC) maps, are displayed: 
-
-![Diffusion-weighted images obtained for a doped water bottle phantom including four different levels of diffusion-weighting (250 to 1000 s/mm^2) and corresponding ADC maps for three orthogonal directions.](Phantom_ADC.png)
-
-Note that the measured ADC value is within the expected value for water at room temperature (2.0x10^{-3} mm^2/s). 
-
-For image processing, we employ widely used open-source software tools, including the matlab toolbox for dealing with Nifti images (https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image) and FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki, [@jenkinson2012fsl]) for image pre-processing and diffusion tensor estimation. In vivo images reconstructed from the provided k-space data are shown for different levels of diffusion-weighting sampled along three orthogonal directions: 
-
-![In vivo diffusion-weighted images corresponding to different diffusion-weighting levels along three orthogonal directions.](InVivo3dirs.png)
- These images and diffusion maps were obtained using the process_data matlab script.
-
-The principal eigenvector estimated for a 12 direction in vivo data set provided as example is shown here:
-
-![Example in vivo data sampling 12 diffusion direction - principal eigenvector field in red overlaying the estimated fractional anisotropy map.](InVivo_V1.png)
-
 # Target audience
 `PulseqDiffusion` is aimed at MRI researchers focusing on DWI pulse sequence design. We envisage `PulseqDiffusion` to be used for replicability and reproducibility studies (multi-site, multi-vendor). The package could also serve as a hands-on teaching aid for MRI faculty and students. Users can get started with the example pulse sequences and provided phantom and in vivo data. 
 

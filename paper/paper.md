@@ -31,7 +31,6 @@ authors:
   - name: Sairam Geethanath
     orcid: 0000-0002-3776-4114
     affiliation: 2
-  
 affiliations:
  - name: Institute for Systems and Robotics and Department of Bioengineering, Instituto Superior T\{'e}cnico, Universidade de Lisboa, Lisbon, Portugal
    index: 1
@@ -39,7 +38,6 @@ affiliations:
    index: 2
  - name: Laboratorio de Procesado de Imagen, Universidad de Valladolid, Valladolid, Spain
    index: 3
-
 date: 04 July 2020
 bibliography: paper.bib
 ---
@@ -64,8 +62,17 @@ Together with the Python functions required to generate DWI sequences, we provid
 
 We provide Python scripts for generating example diffusion-weighted EPI sequences including single-spin echo preparation (with and without ramp-sampling during signal readout) and a doubly-refocused preparation module [@reese2013tre] as shown in \autoref{fig:tre_seq}. The sets of diffusion gradient directions considered for pulse sequence implementation were optimised using MRtrix3 (https://www.mrtrix.org/, [@tournier2019mrtrix]). 
 
-We provide example data as well as Matlab functions for basic reconstruction and image processing. Phantom images reconstructed from the provided example k-space data, including four different levels of diffusion-weighting along three orthogonal directions, as well as the corresponding apparent diffusion coefficient (ADC) maps, are displayed in \autoref{fig:phantom_adc}. Note that the measured ADC value is within the expected value for water at room temperature (2.0x10^{-3} mm²/s). For image processing, we employ widely used open-source software tools, including the matlab toolbox for dealing with Nifti images (https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image) and FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki,[@jenkinson2012fsl]) for image pre-processing and diffusion tensor estimation. 
-In vivo images reconstructed from the provided k-space data are shown for different levels of diffusion-weighting sampled along three orthogonal directions \autoref{fig:invivo3dirs}. The principal eigenvector estimated for a 12 direction in vivo data set provided as example is shown in \autoref{fig:invivov1}. These images and diffusion maps were obtained using the process_data matlab script.
+-![Example diffusion-weighted EPI sequence using a twice-refocused preparation module for 1 slice measuring diffusion along the readout direction using a b-value of 500 s/mm^2. The gradient waveforms applied along all three directions are shown above while the signal acquisition (ADC) and RF pulse waveforms are shown below. \label{fig:tre_seq}](tre_seq.png)
+
+We provide example data as well as Matlab functions for basic reconstruction and image processing. Phantom images reconstructed from the provided example k-space data, including four different levels of diffusion-weighting along three orthogonal directions, as well as the corresponding apparent diffusion coefficient (ADC) maps, are displayed in \autoref{fig:phantom_adc}. Note that the measured ADC value is within the expected value for water at room temperature (2.0x10^{-3} mm²/s). 
+
+-![Diffusion-weighted images obtained for a doped water bottle phantom including four different levels of diffusion-weighting (250 to 1000 s/mm^2) and corresponding ADC maps for three orthogonal directions. \label{fig:phantom_adc}](Phantom_ADC.png)
+
+For image processing, we employ widely used open-source software tools, including the matlab toolbox for dealing with Nifti images (https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image) and FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki,[@jenkinson2012fsl]) for image pre-processing and diffusion tensor estimation. In vivo images reconstructed from the provided k-space data are shown for different levels of diffusion-weighting sampled along three orthogonal directions \autoref{fig:invivo3dirs}. The principal eigenvector estimated for a 12 direction in vivo data set provided as example is shown in \autoref{fig:invivov1}. These images and diffusion maps were obtained using the process_data matlab script.
+
+-![In vivo diffusion-weighted images corresponding to different diffusion-weighting levels along three orthogonal directions. \label{fig:invivo3dirs}](InVivo3dirs.png)
+
+-![Example in vivo data sampling 12 diffusion direction - principal eigenvector field in red overlaying the estimated fractional anisotropy map. \label{fig:invivov1}](InVivo_V1.png)
 
 # Target audience
 `PulseqDiffusion` is aimed at MRI researchers focusing on DWI pulse sequence design. We envisage PulseqDiffusion to be used for replicability and reproducibility studies (multi-site, multi-vendor). The package could also serve as a hands-on teaching aid for MRI faculty and students. Users can get started with the example pulse sequences and provided phantom and in vivo data. 
@@ -73,15 +80,7 @@ In vivo images reconstructed from the provided k-space data are shown for differ
 # Acknowledgements
 This study was funded by the Portuguese Foundation for Science and Technology (FCT) under the Indo-Portuguese Programme for Cooperation in Science & Technology, 2017-2019 and grants (UID/EEA/50009/2019 and SFRH/BSAB/150270/2019). Acquisition of example data was funded under the Zuckerman Institute Technical Development Grant for MR, Zuckerman Mind Brain Behavior Institute,Grant Number: CU-ZI-MR-T-0002. 
 
-
 # References
 
-# Figures
-![Example diffusion-weighted EPI sequence using a twice-refocused preparation module for 1 slice measuring diffusion along the readout direction using a b-value of 500 s/mm^2. The gradient waveforms applied along all three directions are shown above while the signal acquisition (ADC) and RF pulse waveforms are shown below. \label{fig:tre_seq}](tre_seq.png)
 
-![Diffusion-weighted images obtained for a doped water bottle phantom including four different levels of diffusion-weighting (250 to 1000 s/mm^2) and corresponding ADC maps for three orthogonal directions. \label{fig:phantom_adc}](Phantom_ADC.png)
-
-![In vivo diffusion-weighted images corresponding to different diffusion-weighting levels along three orthogonal directions. \label{fig:invivo3dirs}](InVivo3dirs.png)
-
-![Example in vivo data sampling 12 diffusion direction - principal eigenvector field in red overlaying the estimated fractional anisotropy map. \label{fig:invivov1}](InVivo_V1.png)
 

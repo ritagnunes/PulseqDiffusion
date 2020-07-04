@@ -17,8 +17,7 @@ A tool for predicting the signal-to-noise ratio (SNR) observed for different bra
 ## Installation and Dependencies
 For sequence optimization depending on available hardware (`jMRI_Publication_Functions`): Matlab (www.mathworks.com)
 
-For sequence development: PyPulseq [[2]] (#references)
-\>=Python 3.6, virtual environment recommended:
+For sequence development: PyPulseq [[2]](#references) \>=Python 3.6, virtual environment recommended:
 ```pip install pypulseq```
 
 To perform basic image reconstruction and processing:

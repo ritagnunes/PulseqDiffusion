@@ -70,7 +70,7 @@ We provide example data as well as Matlab functions for basic reconstruction and
 
 ![Diffusion-weighted images obtained for a doped water bottle phantom including four different levels of diffusion-weighting (250 to 1000 s/mm^2) and corresponding ADC maps for three orthogonal directions.](Phantom_ADC.png)
 
-Note that the measured ADC value is within the expected value for water at room temperature (2.0x10^{-3} mm²/s). 
+Note that the measured ADC value is within the expected value for water at room temperature (2.0x10^{-3} mm^2/s). 
 
 For image processing, we employ widely used open-source software tools, including the matlab toolbox for dealing with Nifti images (https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image) and FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki, [@jenkinson2012fsl]) for image pre-processing and diffusion tensor estimation. In vivo images reconstructed from the provided k-space data are shown for different levels of diffusion-weighting sampled along three orthogonal directions: 
 

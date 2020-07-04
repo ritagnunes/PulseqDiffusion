@@ -81,6 +81,3 @@ For image processing, we employ widely used open-source software tools, includin
 This study was funded by the Portuguese Foundation for Science and Technology (FCT) under the Indo-Portuguese Programme for Cooperation in Science & Technology, 2017-2019 and grants (UID/EEA/50009/2019 and SFRH/BSAB/150270/2019). Acquisition of example data was funded under the Zuckerman Institute Technical Development Grant for MR, Zuckerman Mind Brain Behavior Institute,Grant Number: CU-ZI-MR-T-0002. 
 
 # References
-
-
-

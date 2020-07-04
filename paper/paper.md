@@ -72,7 +72,7 @@ We provide example data as well as Matlab functions for basic reconstruction and
 
 Note that the measured ADC value is within the expected value for water at room temperature (2.0x10^{-3} mm²/s). 
 
-For image processing, we employ widely used open-source software tools, including the matlab toolbox for dealing with Nifti images (https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image) and FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki,[@jenkinson2012fsl]) for image pre-processing and diffusion tensor estimation. In vivo images reconstructed from the provided k-space data are shown for different levels of diffusion-weighting sampled along three orthogonal directions: 
+For image processing, we employ widely used open-source software tools, including the matlab toolbox for dealing with Nifti images (https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image) and FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki, [@jenkinson2012fsl]) for image pre-processing and diffusion tensor estimation. In vivo images reconstructed from the provided k-space data are shown for different levels of diffusion-weighting sampled along three orthogonal directions: 
 
 ![In vivo diffusion-weighted images corresponding to different diffusion-weighting levels along three orthogonal directions.](InVivo3dirs.png)
  These images and diffusion maps were obtained using the process_data matlab script.

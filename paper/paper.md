@@ -1,3 +1,4 @@
+---
 title: 'PulseqDiffusion: Diffusion-Weighted Echo Planar Imaging sequence using the Open Source software PyPulseq'
 tags: 
   - Python
@@ -39,7 +40,7 @@ affiliations:
  - name: Laboratorio de Procesado de Imagen, Universidad de Valladolid, Valladolid, Spain
    index: 3
 
-date: 21 June 2020
+date: 04 July 2020
 bibliography: paper.bib
 ---
 

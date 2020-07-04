@@ -25,7 +25,7 @@ authors:
   - name: Marc Golub
     orcid: 0000-0002-4824-9740
     affiliation: 1
-- name: John Thomas Vaughan Jr.
+  - name: John Thomas Vaughan Jr.
     orcid: 0000-0002-6933-3757
     affiliation: 2
   - name: Sairam Geethanath

@@ -1,6 +1,6 @@
 ---
 title: 'PulseqDiffusion: Diffusion-Weighted Echo Planar Imaging sequence using the Open Source software PyPulseq'
-tags: 
+tags:
   - Python
   - MRI
   - diffusion-weighted imaging

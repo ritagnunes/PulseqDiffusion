@@ -13,7 +13,7 @@ authors:
   - name: Keerthi Sravan Ravi
     orcid: 0000-0001-6886-0101
     affiliation: 2
-  - name: \{'O}scar Pe\{~n}a-Nogales
+  - name: {\'O}scar Pe{\~n}a-Nogales
     orcid: 0000-0001-7364-9335
     affiliation: 3
   - name: Tiago T. Fernandes
@@ -51,7 +51,7 @@ We have leveraged this tool for published research works [@nunes2020dwpypulseq; 
 # Statement of need
 Multiple freely available open-source image processing tools have been developed for DWI such as [MRtrix3](https://www.mrtrix.org/) [@tournier2019mrtrix], [DiPy](www.dipy.org) [@garyfallidis2014dipy], and dedicated tools in [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki), [@jenkinson2012fsl]. However, vendor-neutral open-source acquisition implementations have not been previously shared.
 
-There has been a growing interest in developing open-source solutions for MRI, aiming to improve its accessibility (www.opensourceimaging.org). `PulseqDiffusion` will allow easier prototyping of DWI sequences and enable cross-vendor comparisons in clinical scanners.
+There has been a growing interest in developing open-source solutions for MRI, aiming to improve its accessibility [www.opensourceimaging.org](www.opensourceimaging.org). `PulseqDiffusion` will allow easier prototyping of DWI sequences and enable cross-vendor comparisons in clinical scanners.
 We also expect `PulseqDiffusion` to be a useful starting point for sequence development in the context of accessible low-field stroke imaging [@geethanath2019lowfield].
 
 # About `PulseqDiffusion`
@@ -72,9 +72,8 @@ Note that the measured ADC value is within the expected value for water at room 
 For image processing, we employ widely used open-source software tools, including the [matlab toolbox for dealing with Nifti images](https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image) and [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki), [@jenkinson2012fsl] for image pre-processing and diffusion tensor estimation. In vivo images reconstructed from the provided k-space data are shown for different levels of diffusion-weighting sampled along three orthogonal directions:
 
 ![In vivo diffusion-weighted images corresponding to different diffusion-weighting levels along three orthogonal directions.](figures/InVivo3dirs.png)
- These images and diffusion maps were obtained using the process_data matlab script (ethics approval from the local IRB and written informed consent were obtained prior to scanning).
 
-The principal eigenvector estimated for a 12 direction in vivo data set provided as example is shown here:
+These images and diffusion maps were obtained using the process_data matlab script (ethics approval from the local IRB and written informed consent were obtained prior to scanning). The principal eigenvector estimated for a 12 direction in vivo data set provided as example is shown here:
 
 ![Example in vivo data sampling 12 diffusion direction - principal eigenvector field in red overlaying the estimated fractional anisotropy map.](figures/InVivo_V1.png)
 

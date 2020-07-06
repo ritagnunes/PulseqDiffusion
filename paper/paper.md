@@ -66,9 +66,9 @@ The sets of diffusion gradient directions considered for pulse sequence implemen
 
 We provide example data as well as Matlab functions for basic ghost correction and partial Fourier Homodyne reconstruction, as well as image processing. Phantom images reconstructed from the provided example k-space data, including five different levels of diffusion-weighting along three orthogonal directions, as well as the corresponding apparent diffusion coefficient (ADC) maps, are displayed:
 
-![Diffusion-weighted images obtained for a doped water bottle phantom including five different levels of diffusion-weighting (200 to 1000 s/mm^2) and corresponding ADC maps for three orthogonal directions.](figures/Phantom_ADC.png)
+![Diffusion-weighted images obtained for a doped water bottle phantom including five different levels of diffusion-weighting (200 to 1000 s/mm<sup>2</sup>) and corresponding ADC maps for three orthogonal directions.](figures/Phantom_ADC.png)
 
-Note that the measured ADC value is within the expected value for water at room temperature (2.0x10^{-3} mm^2/s).
+Note that the measured ADC value is within the expected value for water at room temperature (2.0x10<sup>-3</sup> mm<sup>2</sup>/s).
 
 For image processing, we employ widely used open-source software tools, including the [matlab toolbox for dealing with Nifti images](https://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image) and [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki), [@jenkinson2012fsl] for image pre-processing and diffusion tensor estimation. In vivo images reconstructed from the provided k-space data are shown for different levels of diffusion-weighting sampled along three orthogonal directions:
 

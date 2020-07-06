@@ -85,10 +85,10 @@ refB0init  = 1.5;                                   % refB0 (T)
 
 % ... Load Tend Vector ... 
 if seq == 'S'       % load Tend_vector_Spiral
-    load('Tend_vector_1shot.mat') 
+    load('./Example_Data/Tend_vector_1shot.mat') 
     plot_seq = 'Spiral';
 elseif seq == 'E'   % load Tend_vector_EPI
-    load('Tend_vector_EPI.mat')
+    load('./Example_Data/Tend_vector_EPI.mat')
     plot_seq = 'EPI';
 end
 
@@ -145,7 +145,7 @@ SNR_B0ref     = B0(refB0idx).^SNR_PowerLaw;
 
 % TE reference with partial EPI - results from the derivation of the b-value formula
 percTrout     = 0.285714;                                               % percentage of time to get to the centre k_space due to partial EPI
-T_endRef      = load('Tend_vector_EPI.mat');                            % load reference Time of read out for partial EPI
+T_endRef      = load('./Example_Data/Tend_vector_EPI.mat');                            % load reference Time of read out for partial EPI
 part_Tend_ref = percTrout*T_endRef.Tend_Vector(refgmMax,refRes)*1e-3;   % sequence readout time until k_space center in (s)
 auxD_ref      = aux_delta(convertB,gmMax,part_Tend_ref,gamma);          % auxiliar
 deltaEPI_ref  = delta(gmMax,part_Tend_ref,auxD_ref,gamma);              % delta in (s)

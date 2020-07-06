@@ -13,7 +13,7 @@ authors:
   - name: Keerthi Sravan Ravi
     orcid: 0000-0001-6886-0101
     affiliation: 2
-  - name: {\'O}scar Pe{\~n}a-Nogales
+  - name: {\`O}scar Pe{\~n}a-Nogales
     orcid: 0000-0001-7364-9335
     affiliation: 3
   - name: Tiago T. Fernandes

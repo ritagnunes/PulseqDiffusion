@@ -13,7 +13,7 @@ authors:
   - name: Keerthi Sravan Ravi
     orcid: 0000-0001-6886-0101
     affiliation: 2
-  - name: {`O}scar Pe{~n}a-Nogales
+  - name: Oscar Pena-Nogales
     orcid: 0000-0001-7364-9335
     affiliation: 3
   - name: Tiago T. Fernandes
@@ -32,7 +32,7 @@ authors:
     orcid: 0000-0002-3776-4114
     affiliation: 2
 affiliations:
- - name: Institute for Systems and Robotics and Department of Bioengineering, Instituto Superior T\{'e}cnico, Universidade de Lisboa, Lisbon, Portugal
+ - name: Institute for Systems and Robotics and Department of Bioengineering, Instituto Superior Tecnico, Universidade de Lisboa, Lisbon, Portugal
    index: 1
  - name: Columbia Magnetic Resonance Research Center, Columbia University in the City of New York, USA
    index: 2

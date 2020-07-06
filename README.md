@@ -21,7 +21,7 @@ For sequence development: PyPulseq [[2]](#references) \>=Python 3.6, virtual env
 ```pip install pypulseq```
 
 To perform basic image reconstruction and processing:
-Matlab toolbox for writing and reading Nifti images: Nifti_tools downloadable from [[7]](#references)
+Matlab toolbox for writing and reading Nifti images: Nifti_tools downloadable from [[7]](#references) to be placed within a folder called 'nifti_tools'
 
 FSL - Fmrib's Software Library [[5]](#references)
 FSL installation instructions can be found at:

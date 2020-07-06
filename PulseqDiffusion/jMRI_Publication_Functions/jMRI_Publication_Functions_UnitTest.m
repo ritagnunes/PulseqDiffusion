@@ -46,7 +46,3 @@ LongSS_SignalTest
 fprintf('\n\n');
 
 
-%% Test 7 - SNR_CNR_Study_SimulationTest
-fprintf('--- 7 - Test ---\n');
-SNR_CNR_Study_SimulationTest
-fprintf('\n\n');

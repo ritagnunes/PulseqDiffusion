@@ -52,7 +52,7 @@ We have leveraged this tool for published research works [@nunes2020dwpypulseq; 
 # Statement of need
 Multiple freely available open-source image processing tools have been developed for DWI such as [MRtrix3](https://www.mrtrix.org/) [@tournier2019mrtrix], [DiPy](www.dipy.org) [@garyfallidis2014dipy], and dedicated tools in [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki), [@jenkinson2012fsl]. However, vendor-neutral open-source acquisition implementations have not been previously shared.
 
-There has been a growing interest in developing open-source solutions for MRI, aiming to improve its accessibility ([www.opensourceimaging.org])(www.opensourceimaging.org). `PulseqDiffusion` will allow easier prototyping of DWI sequences and enable cross-vendor comparisons in clinical scanners.
+There has been a growing interest in developing open-source solutions for MRI, aiming to improve its accessibility ([www.opensourceimaging.org](www.opensourceimaging.org)). `PulseqDiffusion` will allow easier prototyping of DWI sequences and enable cross-vendor comparisons in clinical scanners.
 We also expect `PulseqDiffusion` to be a useful starting point for sequence development in the context of accessible low-field stroke imaging [@geethanath2019lowfield].
 
 # About `PulseqDiffusion`

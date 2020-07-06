@@ -18,9 +18,10 @@ How to run the SNR & CNR Study Simulation?
 1 - Download the folder of 'jMRI_Publication_Functions'
 2 - Select a directory and create a folder called 'SNR_CNR_Study'
 3 - Copy files from 'jMRI_Publication_Functions' to this new folder
-4 - Open file 'SNR_CNR_Study_Simulation.m'
-5 - Before running on Matlab, select the values you are interested in see on the outcome plots
-6 - Run the script 'SNR_CNR_Study_Simulation.m' - all other functions are called with this script.
+4 - Run file 'jMRI_Publication_Functions_UnitTest.m' to perform unit test on all function and scripts of this toolbox
+5 - Open file 'SNR_CNR_Study_Simulation.m'
+6 - Before running on Matlab, select the values you are interested in see on the outcome plots
+7 - Run the script 'SNR_CNR_Study_Simulation.m' - all other functions are called with this script.
 
 
 

@@ -1,5 +1,5 @@
 ---
-title: 'PulseqDiffusion: Diffusion-Weighted Echo Planar Imaging sequence using the Open Source software PyPulseq'
+title: 'PulseqDiffusion: PyPulseq implementation of Diffusion-Weighted Echo Planar Imaging'
 tags:
   - Python
   - MRI
@@ -20,7 +20,7 @@ authors:
     orcid: 0000-0002-4739-2713
     affiliation: 1
   - name: Pavan Poojar
-    orcid: 0000-0002-4739-2713
+    orcid: 0000-0001-6917-8219
     affiliation: 2
   - name: Marc Golub
     orcid: 0000-0002-4824-9740
@@ -43,9 +43,9 @@ bibliography: paper.bib
 ---
 
 # Summary
-Magnetic Resonance Imaging (MRI) acquisitions consist of the sequential application of radio-frequency and magnetic field gradient pulses. Diffusion-Weighted Imaging (DWI) is a widely used type of MRI pulse sequence providing a key image contrast for clinical brain applications such as stroke imaging [@schellinger2010stroke].
+Magnetic Resonance Imaging (MRI) acquisitions consist of a series of radio-frequency and magnetic field gradient pulses. Diffusion-Weighted Imaging (DWI) is a widely used type of MRI pulse sequence providing a key image contrast for clinical brain applications such as stroke imaging [@schellinger2010stroke].
 
-Developing new acquisition strategies for DWI acquisition typically requires access to and expertise on the programming environment of the MRI vendor. Pulseq [@layton2017pulseq] is an open source file standard for pulse sequences that enables to deploy the exact same protocol on both Siemens/GE via [TOPPE](https://toppemri.github.io)
+Developing new acquisition strategies for DWI acquisition typically requires access to and expertise on the programming environment of the MRI vendor; this limitation has been mitigated though the introduction of Pulseq [@layton2017pulseq], an open source file standard for pulse sequences that enables to deploy the exact same protocol on both Siemens/GE via [TOPPE](https://toppemri.github.io)
 [@nielsen2018toppe] and [Bruker](https://github.com/pulseq/bruker_interpreter) platforms, and potentially also on in-house built MRI systems. In this work we introduce `PulseqDiffusion` to enable open-source DWI pulse sequence programming, using PyPulseq [@ravi2019pypulseqjoss; @ravi2018pulseq-gpi], a Python-based implementation of Pulseq [@layton2017pulseq].
 We have leveraged this tool for published research works [@nunes2020dwpypulseq; @fernandes2020snr].
 
@@ -80,7 +80,7 @@ These images and diffusion maps were obtained using the process_data matlab scri
 
 
 # Target audience
-`PulseqDiffusion` is aimed at MRI researchers focusing on DWI pulse sequence design. We envisage `PulseqDiffusion` to be used for replicability and reproducibility studies (multi-site, multi-vendor). The package could also serve as a hands-on teaching aid for MRI faculty and students. Users can get started with the example pulse sequences and provided phantom and in vivo data.
+`PulseqDiffusion` is aimed at MRI researchers focusing on DWI acquisition. We envisage `PulseqDiffusion` to be used for replicability and reproducibility studies (multi-site, multi-vendor). The package could also serve as a hands-on teaching aid for MRI faculty and students. Users can get started with the example pulse sequences and provided phantom and in vivo data.
 
 # Acknowledgements
 This study was funded by the Portuguese Foundation for Science and Technology (FCT) under the Indo-Portuguese Programme for Cooperation in Science & Technology, 2017-2019 and grants (UID/EEA/50009/2019 and SFRH/BSAB/150270/2019). Acquisition of example data was funded under the Zuckerman Institute Technical Development Grant for MR, Zuckerman Mind Brain Behavior Institute,Grant Number: CU-ZI-MR-T-0002.

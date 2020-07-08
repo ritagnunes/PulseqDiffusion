@@ -36,7 +36,7 @@
 
 %% Add path
 
-addpath(genpath('..\SNR_CNR_Study'));
+addpath(genpath('./SNR_CNR_Study'));
 
 clear all
 % close all

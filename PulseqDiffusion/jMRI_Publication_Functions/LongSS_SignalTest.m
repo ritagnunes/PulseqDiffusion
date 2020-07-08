@@ -20,6 +20,7 @@ TRep      = 3.2833;
 TE        = 0.0143;
 T1        = 0.1004; 
 T2        = 0.0639; 
+LongSS_signal_pred = load('./Example_Data/LongSS_Signal_TestResults.mat'); % in s
 LongSS_signal_act  = LongSS_Signal(FlipAngle,TRep,TE,T1,T1);
 assertValue(LongSS_signal_act,LongSS_signal_pred.LongSSsignal_VectorTest(2))
 clear FlipAngle TRep TE T1 T2
@@ -32,6 +33,7 @@ TRep      = 2.9760;
 TE        = 0.0132;
 T1        = 0.1004; 
 T2        = 0.0639; 
+LongSS_signal_pred = load('./Example_Data/LongSS_Signal_TestResults.mat'); % in s
 LongSS_signal_act  = LongSS_Signal(FlipAngle,TRep,TE,T1,T1);
 assertValue(LongSS_signal_act,LongSS_signal_pred.LongSSsignal_VectorTest(3))
 clear FlipAngle TRep TE T1 T2

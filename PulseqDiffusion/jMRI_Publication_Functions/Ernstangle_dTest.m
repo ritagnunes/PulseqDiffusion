@@ -15,6 +15,7 @@ addpath(genpath('./SNR_CNR_Study'));
 
 TR = 1.7642;
 T1 = 0.9982; 
+Eangle_pred = load('./Example_Data/Ernstangle_d_TestResults.mat');
 Eangle_act  = Ernstangle_d(TR,T1); % in degrees
 assertValue(Eangle_act,Eangle_pred.Eangle_VectorTest(2))
 clear TR T1
@@ -24,6 +25,7 @@ addpath(genpath('./SNR_CNR_Study'));
 
 TR = 1.2858;
 T1 = 0.6806; 
+Eangle_pred = load('./Example_Data/Ernstangle_d_TestResults.mat');
 Eangle_act  = Ernstangle_d(TR,T1); % in degrees
 assertValue(Eangle_act,Eangle_pred.Eangle_VectorTest(3))
 clear TR T1

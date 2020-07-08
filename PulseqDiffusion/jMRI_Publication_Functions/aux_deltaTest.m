@@ -17,7 +17,8 @@ clear b_value gmMax part_Tend gamma
 b_value   = 1000*1e6;
 gmMax     = 0.014;
 part_Tend = 0.0458;
-gamma     = 42.577e6; 
+gamma     = 42.577e6;
+aDelta_pred = load('./Example_Data/aux_delta_TestResults.mat');
 aDelta_act = aux_delta(b_value,gmMax,part_Tend,gamma);
 assertValue(aDelta_act,aDelta_pred.aDelta_VectorTest(2))
 clear b_value gmMax part_Tend gamma
@@ -27,7 +28,8 @@ clear b_value gmMax part_Tend gamma
 b_value   = 200*1e6;
 gmMax     = 0.020;
 part_Tend = 0.0458;
-gamma     = 42.577e6; 
+gamma     = 42.577e6;
+aDelta_pred = load('./Example_Data/aux_delta_TestResults.mat');
 aDelta_act = aux_delta(b_value,gmMax,part_Tend,gamma);
 assertValue(aDelta_act,aDelta_pred.aDelta_VectorTest(3))
 clear b_value gmMax part_Tend gamma

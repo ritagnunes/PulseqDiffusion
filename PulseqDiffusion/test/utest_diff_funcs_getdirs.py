@@ -1,6 +1,12 @@
+import sys
 import unittest
+from pathlib import Path
 
 import numpy as np
+
+if __name__ == '__main__':
+    path = Path(__file__).absolute().parent.parent.parent
+    sys.path.insert(0, str(path))
 
 import PulseqDiffusion.diff_funcs as difunc
 

@@ -6,6 +6,10 @@ from pathlib import Path
 from pypulseq import opts
 from pypulseq.Sequence import sequence
 
+if __name__ == '__main__':
+    path = Path(__file__).absolute().parent.parent.parent
+    sys.path.insert(0, str(path))
+
 import PulseqDiffusion.diff_funcs as difunc
 
 sys.modules['sequence'] = sequence

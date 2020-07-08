@@ -12,6 +12,12 @@ The b-value is computed according to the b-value integral definition.
 
 import math
 import os
+import sys
+from pathlib import Path
+
+if __name__ == '__main__':
+    path = Path(__file__).absolute().parent.parent
+    sys.path.insert(0, str(path))
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -130,8 +136,8 @@ dur = math.ceil(calc_duration(gy) / seq.grad_raster_time) * seq.grad_raster_time
 # The time(gy) refers to the number of blips, thus we substract 0.5 since the number of lines is always even.
 # The time(gx) refers to the time needed to read each line of the k-space. Thus, if Ny is even, it would take half of the lines plus another half.
 duration_center = (
-            calc_duration(gx) * (Ny / 2 + 0.5 - (Ny - Nyeff)) + dur * (Ny / 2 - 0.5 - (Ny - Nyeff)) + calc_duration(
-        gx_pre, gy_pre))
+        calc_duration(gx) * (Ny / 2 + 0.5 - (Ny - Nyeff)) + dur * (Ny / 2 - 0.5 - (Ny - Nyeff)) + calc_duration(
+    gx_pre, gy_pre))
 rf_center_with_delay = rf.delay + calc_rf_center(rf)[0]
 rf180_center_with_delay = rf180.delay + calc_rf_center(rf180)[0]
 
@@ -166,12 +172,12 @@ EPI_time = calc_duration(gx) * Nyeff + calc_duration(gy) * (Nyeff - 1)
 tr_per_slice = TR / n_slices
 if fatsat_enable:
     tr_delay = math.floor((tr_per_slice - (
-                TE - duration_center + EPI_time + pre_time) - rf_center_with_delay - calc_duration(gx_crush, gz_crush) \
+            TE - duration_center + EPI_time + pre_time) - rf_center_with_delay - calc_duration(gx_crush, gz_crush) \
                            - calc_duration(rf_fs, gz_fs)) \
                           / seq.grad_raster_time) * seq.grad_raster_time
 else:
     tr_delay = math.floor((tr_per_slice - (
-                TE - duration_center + EPI_time + pre_time) - rf_center_with_delay - calc_duration(gx_crush, gz_crush)) \
+            TE - duration_center + EPI_time + pre_time) - rf_center_with_delay - calc_duration(gx_crush, gz_crush)) \
                           / seq.grad_raster_time) * seq.grad_raster_time
 
 # Check TR delay time

@@ -10,6 +10,12 @@ This function builds a spin echo EPI with ramp sampling diffusion weighting sequ
 
 import math
 import os
+import sys
+from pathlib import Path
+
+if __name__ == '__main__':
+    path = Path(__file__).absolute().parent.parent
+    sys.path.insert(0, str(path))
 
 import matplotlib.pyplot as plt
 import numpy as np

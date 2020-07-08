@@ -7,10 +7,8 @@ Created on Thu Aug  1 14:09:08 2019
 """
 
 import math
-import sys
 
 import numpy as np
-
 from pypulseq.calc_duration import calc_duration
 from pypulseq.make_trap_pulse import make_trapezoid
 
@@ -151,10 +149,10 @@ def calc_bval(G, delta, Delta, gdiff_rt):
     """
 
     bval = (2 * math.pi * G) ** 2 * (
-    (Delta - delta / 3) * (delta ** 2) + (gdiff_rt ** 3) / 30 - delta * (gdiff_rt ** 2) / 6)
-
+            (Delta - delta / 3) * (delta ** 2) + (gdiff_rt ** 3) / 30 - delta * (gdiff_rt ** 2) / 6)
 
     return bval
+
 
 def calc_exact_bval(waveform, INV, short_f, seq):
     """
@@ -197,7 +195,8 @@ def calc_exact_bval(waveform, INV, short_f, seq):
     C2 = np.matmul(np.transpose(C), C)
 
     F = waveform * INV * short_f * seq.grad_raster_time
-    bval = (2 * math.pi) ** 2 * np.matmul(np.matmul(np.transpose(F), C2), F) * short_f * seq.grad_raster_time * 1e-6  # [s/mm2]
+    bval = (2 * math.pi) ** 2 * np.matmul(np.matmul(np.transpose(F), C2),
+                                          F) * short_f * seq.grad_raster_time * 1e-6  # [s/mm2]
     return bval
 
 
@@ -245,20 +244,21 @@ def opt_TE_bv_SE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
     # be the same, and thus exact timing is mandatory. With this in mind, we establish the following rounding rules:
     # Duration of RFs + spoiling, and EPI time to the center of the k-space is always math.ceil().
 
-    bvalue = bvalue_Dict["bvalue"] # Target b-value.
-    nbvals = bvalue_Dict["nbvals"] # number of b-values.
-    gscl = bvalue_Dict["gscl"] # gradient scaling.
+    bvalue = bvalue_Dict["bvalue"]  # Target b-value.
+    nbvals = bvalue_Dict["nbvals"]  # number of b-values.
+    gscl = bvalue_Dict["gscl"]  # gradient scaling.
 
-    n_rf90r = grads_times_Dict["n_rf90r"] # Half right duration of RF90 (integer).
-    n_rf180r = grads_times_Dict["n_rf180r"] # Half right duration of the RF180 (integer).
-    n_rf180l = grads_times_Dict["n_rf180l"] # Half left duration of the RF180 (integer).
-    gz_spoil = grads_times_Dict["gz_spoil"] # Spoil gradient to be placed around the RF180.
-    gz180 = grads_times_Dict["gz180"] # RF180 simultaneous gradient.
-    n_duration_center = grads_times_Dict["n_duration_center"] # Time needed to achieve the center of the k-space (integer).
+    n_rf90r = grads_times_Dict["n_rf90r"]  # Half right duration of RF90 (integer).
+    n_rf180r = grads_times_Dict["n_rf180r"]  # Half right duration of the RF180 (integer).
+    n_rf180l = grads_times_Dict["n_rf180l"]  # Half left duration of the RF180 (integer).
+    gz_spoil = grads_times_Dict["gz_spoil"]  # Spoil gradient to be placed around the RF180.
+    gz180 = grads_times_Dict["gz180"]  # RF180 simultaneous gradient.
+    n_duration_center = grads_times_Dict[
+        "n_duration_center"]  # Time needed to achieve the center of the k-space (integer).
 
-    seq = seq_sys_Dict["seq"] # Sequence
-    system = seq_sys_Dict["system"] # System
-    i_raster_time = seq_sys_Dict["i_raster_time"] # Manually inputed inverse raster time.
+    seq = seq_sys_Dict["seq"]  # Sequence
+    system = seq_sys_Dict["system"]  # System
+    i_raster_time = seq_sys_Dict["i_raster_time"]  # Manually inputed inverse raster time.
 
     # Find minimum TE considering the readout times.
     n_TE = math.ceil(40e-3 / seq.grad_raster_time)
@@ -293,7 +293,7 @@ def opt_TE_bv_SE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
         n_gdiff_delta = n_gdiff_delta - 2 * n_gdiff_rt
 
         bv = calc_bval(system.max_grad, n_gdiff_delta / i_raster_time, n_gdiff_Delta / i_raster_time,
-                              n_gdiff_rt / i_raster_time)
+                       n_gdiff_rt / i_raster_time)
         bval = bv * 1e-6
 
     # Show final TE and b-values:
@@ -301,9 +301,10 @@ def opt_TE_bv_SE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
     for bv in range(1, nbvals + 1):
         print(round(
             calc_bval(system.max_grad * gscl[bv], n_gdiff_delta / i_raster_time, n_gdiff_Delta / i_raster_time,
-                             n_gdiff_rt / i_raster_time) * 1e-6, 2), "s/mm2")
+                      n_gdiff_rt / i_raster_time) * 1e-6, 2), "s/mm2")
 
     return n_TE, bval, gdiff, n_delay_te1, n_delay_te2
+
 
 def opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
     """
@@ -347,7 +348,6 @@ def opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
          duration of the last diffusion-weighting gradient lobe after the second RF180 (s).
     """
 
-
     # Description
     # For TRSE waveforms.
     # From an initial TE, check we satisfy all constraints -> otherwise increase TE.
@@ -355,21 +355,21 @@ def opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
     # Finally, with TRSE low b-values can not be acquired, thus proper scaling is needed.
     # Looks time-inefficient but it is fast enough to make it user-friendly.
 
-    bvalue = bvalue_Dict["bvalue"] # Target b-value.
-    nbvals = bvalue_Dict["nbvals"] # number of b-values.
-    gscl = bvalue_Dict["gscl"] # gradient scaling.
+    bvalue = bvalue_Dict["bvalue"]  # Target b-value.
+    nbvals = bvalue_Dict["nbvals"]  # number of b-values.
+    gscl = bvalue_Dict["gscl"]  # gradient scaling.
 
-    rf180 = grads_times_Dict["rf180"] # RF180
-    rf180_center_with_delay = grads_times_Dict["rf180_center_with_delay"] # time to the center of the RF180
-    rf_center_with_delay = grads_times_Dict["rf_center_with_delay"] # time to the center of the RF90
-    gz_spoil_1 = grads_times_Dict["gz_spoil_1"] # Spoil gradient to be placed around the first RF180
-    gz_spoil_2 = grads_times_Dict["gz_spoil_2"] # Spoil gradient to be placed around the second RF180
-    gz = grads_times_Dict["gz"] # RF90 gradient
-    duration_center = grads_times_Dict["duration_center"] # Time needed to achieve the center of the k-space.
-    pre_time = grads_times_Dict["pre_time"] # (s)
+    rf180 = grads_times_Dict["rf180"]  # RF180
+    rf180_center_with_delay = grads_times_Dict["rf180_center_with_delay"]  # time to the center of the RF180
+    rf_center_with_delay = grads_times_Dict["rf_center_with_delay"]  # time to the center of the RF90
+    gz_spoil_1 = grads_times_Dict["gz_spoil_1"]  # Spoil gradient to be placed around the first RF180
+    gz_spoil_2 = grads_times_Dict["gz_spoil_2"]  # Spoil gradient to be placed around the second RF180
+    gz = grads_times_Dict["gz"]  # RF90 gradient
+    duration_center = grads_times_Dict["duration_center"]  # Time needed to achieve the center of the k-space.
+    pre_time = grads_times_Dict["pre_time"]  # (s)
 
-    seq = seq_sys_Dict["seq"] # Sequence
-    system = seq_sys_Dict["system"] # System
+    seq = seq_sys_Dict["seq"]  # Sequence
+    system = seq_sys_Dict["system"]  # System
 
     # Find minimum TE considering the readout times and RF + spoil gradient durations
     TE = 80e-3  # [s] It's a reasonable estimate for TRSE.
@@ -377,8 +377,9 @@ def opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
     while delay_tela <= 0:
         TE = TE + 0.02e-3  # [ms]
         delay_tela = math.ceil((TE / 2 + (- calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_2) - \
-                          duration_center) + (- calc_duration(gz) + rf_center_with_delay - \
-                          pre_time - calc_duration(gz_spoil_1) - rf180_center_with_delay)) / seq.grad_raster_time) * seq.grad_raster_time
+                                          duration_center) + (- calc_duration(gz) + rf_center_with_delay - \
+                                                              pre_time - calc_duration(
+                    gz_spoil_1) - rf180_center_with_delay)) / seq.grad_raster_time) * seq.grad_raster_time
 
     # Sice there are 3 equations and 4 parameters (TGReese2002 - https://doi.org/10.1002/mrm.10308)
     # One parameter can be tuned, while the other 3 are then fixed. This is why we fix d4.
@@ -392,12 +393,14 @@ def opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
         TE = TE + 2 * seq.grad_raster_time  # [ms]
         # Large TE/2
         delay_tela = math.ceil((TE / 2 + (- calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_2) - \
-                          duration_center) + (- calc_duration(gz) + rf_center_with_delay - \
-                          pre_time - calc_duration(gz_spoil_1) - rf180_center_with_delay)) / seq.grad_raster_time) * seq.grad_raster_time
+                                          duration_center) + (- calc_duration(gz) + rf_center_with_delay - \
+                                                              pre_time - calc_duration(
+                    gz_spoil_1) - rf180_center_with_delay)) / seq.grad_raster_time) * seq.grad_raster_time
 
         # Short TE/2 (Time between RF180s)
         delay_tes = math.ceil((TE / 2 - calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_1) - \
-                               calc_duration(gz_spoil_2) - rf180_center_with_delay) / seq.grad_raster_time) * seq.grad_raster_time
+                               calc_duration(
+                                   gz_spoil_2) - rf180_center_with_delay) / seq.grad_raster_time) * seq.grad_raster_time
 
         d1 = math.ceil((delay_tela - d4) / seq.grad_raster_time) * seq.grad_raster_time
 
@@ -413,12 +416,14 @@ def opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
 
         # Large TE/2
         delay_tela = math.ceil((TE / 2 + (- calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_2) - \
-                        duration_center) + (- calc_duration(gz) + rf_center_with_delay - \
-                        pre_time - calc_duration(gz_spoil_1) - rf180_center_with_delay)) / seq.grad_raster_time) * seq.grad_raster_time
+                                          duration_center) + (- calc_duration(gz) + rf_center_with_delay - \
+                                                              pre_time - calc_duration(
+                    gz_spoil_1) - rf180_center_with_delay)) / seq.grad_raster_time) * seq.grad_raster_time
 
         # Short TE/2 (Time between RF180s)
         delay_tes = math.ceil((TE / 2 - calc_duration(rf180) + rf180_center_with_delay - calc_duration(gz_spoil_1) - \
-                 calc_duration(gz_spoil_2) - rf180_center_with_delay) / seq.grad_raster_time) * seq.grad_raster_time
+                               calc_duration(
+                                   gz_spoil_2) - rf180_center_with_delay) / seq.grad_raster_time) * seq.grad_raster_time
 
         d1 = math.ceil((delay_tela - d4) / seq.grad_raster_time) * seq.grad_raster_time
         d3 = math.ceil(((d1 + delay_tes - d4) / 2) / seq.grad_raster_time) * seq.grad_raster_time
@@ -439,7 +444,7 @@ def opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
 
         # d3 starts after d2
         n3 = int(math.ceil(((
-                            n2 + nd2) * seq.grad_raster_time + seq.grad_raster_time) / seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
+                                    n2 + nd2) * seq.grad_raster_time + seq.grad_raster_time) / seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
         nd3 = int(math.ceil(d3 / seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
 
         # d4 starts after the second RF180
@@ -449,7 +454,7 @@ def opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
 
         # Due to the large TE of TRSE and the high resolution we might need to shrink the following array.
         # To speed up computation we calculate the b-value with short_f times lower of the time resolution.
-        
+
         # Shortening factor:
         short_f = 5
         n = int(np.ceil(TE / seq.grad_raster_time) / short_f)
@@ -572,10 +577,12 @@ def opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
 
     # Prepare Integral
     nRF180_1 = int(math.ceil((
-                             n2 * seq.grad_raster_time - calc_duration(rf180) + rf180_center_with_delay - calc_duration(
+                                     n2 * seq.grad_raster_time - calc_duration(
+                                 rf180) + rf180_center_with_delay - calc_duration(
                                  gz_spoil_1)) / short_f / seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
     nRF180_2 = int(math.ceil((
-                             n4 * seq.grad_raster_time - calc_duration(rf180) + rf180_center_with_delay - calc_duration(
+                                     n4 * seq.grad_raster_time - calc_duration(
+                                 rf180) + rf180_center_with_delay - calc_duration(
                                  gz_spoil_2)) / short_f / seq.grad_raster_time) * seq.grad_raster_time / seq.grad_raster_time)
     INV = np.ones(n)
     INV[nRF180_1:nRF180_2 + 1] = -1

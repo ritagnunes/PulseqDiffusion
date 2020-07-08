@@ -1,4 +1,10 @@
+import sys
 import unittest
+from pathlib import Path
+
+if __name__ == '__main__':
+    path = Path(__file__).absolute().parent.parent.parent
+    sys.path.insert(0, str(path))
 
 from PulseqDiffusion.test.utest_diff_funcs_calc_bval import TestCalbval
 from PulseqDiffusion.test.utest_diff_funcs_calc_exact_bval import TestCalexactbval

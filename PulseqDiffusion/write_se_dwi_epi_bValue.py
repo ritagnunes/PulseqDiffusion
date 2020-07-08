@@ -10,7 +10,12 @@ This function builds a spin echo EPI diffusion weighting sequence optimizing the
 
 import math
 import os
+import sys
+from pathlib import Path
 
+if __name__ == '__main__':
+    path = Path(__file__).absolute().parent.parent
+    sys.path.insert(0, str(path))
 import matplotlib.pyplot as plt
 import numpy as np
 from pypulseq.Sequence.sequence import Sequence
@@ -136,7 +141,7 @@ dur = math.ceil(calc_duration(gy) / seq.grad_raster_time) / i_raster_time
 # The time(gy) refers to the number of blips, thus we substract 0.5 since the number of lines is always even.
 # The time(gx) refers to the time needed to read each line of the k-space. Thus, if Ny is even, it would take half of the lines plus another half.
 n_duration_center = math.ceil((calc_duration(gx) * (Ny / 2 + 0.5 - (Ny - Nyeff)) + dur * (
-            Ny / 2 - 0.5 - (Ny - Nyeff)) + calc_duration(gx_pre, gy_pre)) / seq.grad_raster_time)
+        Ny / 2 - 0.5 - (Ny - Nyeff)) + calc_duration(gx_pre, gy_pre)) / seq.grad_raster_time)
 rf_center_with_delay = rf.delay + calc_rf_center(rf)[0]
 
 n_rf90r = math.ceil((calc_duration(gz) - rf_center_with_delay + pre_time) / seq.grad_raster_time)

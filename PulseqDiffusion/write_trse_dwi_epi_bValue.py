@@ -11,22 +11,21 @@ The b-value is computed according to the b-value integral definition.
 """
 
 import math
-import sys
-import numpy as np
 import os
-import diff_funcs as difunc
-
-from pypulseq.make_adc import make_adc
-from pypulseq.make_sinc_pulse import make_sinc_pulse
-from pypulseq.make_gauss_pulse import make_gauss_pulse
-from pypulseq.make_trap_pulse import make_trapezoid
-from pypulseq.opts import Opts
-from pypulseq.calc_duration import calc_duration
-from pypulseq.calc_rf_center import calc_rf_center
-from pypulseq.make_delay import make_delay
-from pypulseq.Sequence.sequence import Sequence
 
 import matplotlib.pyplot as plt
+import numpy as np
+from pypulseq.Sequence.sequence import Sequence
+from pypulseq.calc_duration import calc_duration
+from pypulseq.calc_rf_center import calc_rf_center
+from pypulseq.make_adc import make_adc
+from pypulseq.make_delay import make_delay
+from pypulseq.make_gauss_pulse import make_gauss_pulse
+from pypulseq.make_sinc_pulse import make_sinc_pulse
+from pypulseq.make_trap_pulse import make_trapezoid
+from pypulseq.opts import Opts
+
+import PulseqDiffusion.diff_funcs as difunc
 
 # Create new Sequence Object
 seq = Sequence()
@@ -35,15 +34,15 @@ seq = Sequence()
 
 # Acquisition Parameters
 # FOV and resolution
-fov = 240e-3 # [m]
+fov = 240e-3  # [m]
 Nx = 64
 Ny = 64
-slice_thickness = 2.5e-3 # [m]
+slice_thickness = 2.5e-3  # [m]
 n_slices = 5
 
 # Partial Fourier
-pF = 1 # 0.75
-Nyeff = int(pF*Ny) # Number of Ny samples acquired
+pF = 1  # 0.75
+Nyeff = int(pF * Ny)  # Number of Ny samples acquired
 if pF is not 1:
     pF_str = "_" + str(pF) + "pF"
 else:
@@ -76,8 +75,8 @@ nbvals = np.shape(bvalue)[0]
 ndirs = 6
 
 # Gradient Scaling
-gscl = np.zeros(nbvals+1)
-gscl[1:] = np.sqrt(bvalue/np.max(bvalue))
+gscl = np.zeros(nbvals + 1)
+gscl[1:] = np.sqrt(bvalue / np.max(bvalue))
 gdir, nb0s = difunc.get_dirs(ndirs)
 
 # Set system limits
@@ -89,22 +88,23 @@ if fatsat_enable:
     b0 = 1.494
     sat_ppm = -3.45
     sat_freq = sat_ppm * 1e-6 * b0 * system.gamma
-    rf_fs, _, _ = make_gauss_pulse(flip_angle=110 * math.pi / 180, system=system, duration=8e-3, bandwidth=abs(sat_freq),
-                               freq_offset=sat_freq)
+    rf_fs, _, _ = make_gauss_pulse(flip_angle=110 * math.pi / 180, system=system, duration=8e-3,
+                                   bandwidth=abs(sat_freq),
+                                   freq_offset=sat_freq)
     gz_fs = make_trapezoid(channel='z', system=system, delay=calc_duration(rf_fs), area=1 / 1e-4)
 
 # Create 90 degree slice selection pulse and gradient
 rf, gz, _ = make_sinc_pulse(flip_angle=math.pi / 2, system=system, duration=3e-3, slice_thickness=slice_thickness,
-                                  apodization=0.5, time_bw_product=4)
+                            apodization=0.5, time_bw_product=4)
 
 # Refocusing pulse with spoiling gradients.
 # Note that the RF180 can be the same with the same phase (as long as it agrees with CPMG condition)
 # Also, the spoiling gradients must be different to avoid un-wanted echos:
 rf180, gz180, _ = make_sinc_pulse(flip_angle=math.pi, system=system, duration=5e-3, slice_thickness=slice_thickness,
-                            apodization=0.5, time_bw_product=4)
-rf180.phase_offset = math.pi/2
-gz_spoil_1 = make_trapezoid(channel='z', system=system, area=6/slice_thickness, duration=3e-3)
-gz_spoil_2 = make_trapezoid(channel='z', system=system, area=6*2/slice_thickness, duration=2*3e-3)
+                                  apodization=0.5, time_bw_product=4)
+rf180.phase_offset = math.pi / 2
+gz_spoil_1 = make_trapezoid(channel='z', system=system, area=6 / slice_thickness, duration=3e-3)
+gz_spoil_2 = make_trapezoid(channel='z', system=system, area=6 * 2 / slice_thickness, duration=2 * 3e-3)
 
 # Define other gradients and ADC events
 delta_k = 1 / fov
@@ -129,26 +129,28 @@ dur = math.ceil(calc_duration(gy) / seq.grad_raster_time) * seq.grad_raster_time
 # Calculate some times constant throughout the process
 # The time(gy) refers to the number of blips, thus we substract 0.5 since the number of lines is always even.
 # The time(gx) refers to the time needed to read each line of the k-space. Thus, if Ny is even, it would take half of the lines plus another half.
-duration_center = (calc_duration(gx)*(Ny/2 + 0.5 - (Ny - Nyeff)) + dur * (Ny/2 - 0.5 - (Ny - Nyeff)) + calc_duration(gx_pre, gy_pre))
+duration_center = (
+            calc_duration(gx) * (Ny / 2 + 0.5 - (Ny - Nyeff)) + dur * (Ny / 2 - 0.5 - (Ny - Nyeff)) + calc_duration(
+        gx_pre, gy_pre))
 rf_center_with_delay = rf.delay + calc_rf_center(rf)[0]
 rf180_center_with_delay = rf180.delay + calc_rf_center(rf180)[0]
 
 # Group variables
-seq_sys_Dict = {"seq" : seq,
-           "system" : system}
+seq_sys_Dict = {"seq": seq,
+                "system": system}
 
-grads_times_Dict = {"rf180" : rf180,
-           "rf180_center_with_delay" : rf180_center_with_delay,
-           "rf_center_with_delay" : rf_center_with_delay,
-           "gz_spoil_1": gz_spoil_1,
-           "gz_spoil_2" : gz_spoil_2,
-           "gz" : gz,
-           "duration_center" : duration_center,
-           "pre_time": pre_time}
+grads_times_Dict = {"rf180": rf180,
+                    "rf180_center_with_delay": rf180_center_with_delay,
+                    "rf_center_with_delay": rf_center_with_delay,
+                    "gz_spoil_1": gz_spoil_1,
+                    "gz_spoil_2": gz_spoil_2,
+                    "gz": gz,
+                    "duration_center": duration_center,
+                    "pre_time": pre_time}
 
-bvalue_Dict = {"bvalue" : bvalue,
-               "nbvals" : nbvals,
-               "gscl" : gscl}
+bvalue_Dict = {"bvalue": bvalue,
+               "nbvals": nbvals,
+               "gscl": gscl}
 
 # Optimize TE for the desired b-value for the TRSE sequence
 TE, bvalue_tmp, waveform, gscl_max, d1, d2, d3, d4 = difunc.opt_TE_bv_TRSE(bvalue_Dict, grads_times_Dict, seq_sys_Dict)
@@ -163,12 +165,14 @@ gz_crush = make_trapezoid(channel='z', area=4 / slice_thickness, system=system)
 EPI_time = calc_duration(gx) * Nyeff + calc_duration(gy) * (Nyeff - 1)
 tr_per_slice = TR / n_slices
 if fatsat_enable:
-    tr_delay = math.floor((tr_per_slice - (TE - duration_center + EPI_time + pre_time) - rf_center_with_delay - calc_duration(gx_crush, gz_crush) \
+    tr_delay = math.floor((tr_per_slice - (
+                TE - duration_center + EPI_time + pre_time) - rf_center_with_delay - calc_duration(gx_crush, gz_crush) \
                            - calc_duration(rf_fs, gz_fs)) \
                           / seq.grad_raster_time) * seq.grad_raster_time
 else:
-    tr_delay = math.floor((tr_per_slice - (TE - duration_center + EPI_time + pre_time) - rf_center_with_delay - calc_duration(gx_crush, gz_crush)) \
-                          /seq.grad_raster_time)*seq.grad_raster_time
+    tr_delay = math.floor((tr_per_slice - (
+                TE - duration_center + EPI_time + pre_time) - rf_center_with_delay - calc_duration(gx_crush, gz_crush)) \
+                          / seq.grad_raster_time) * seq.grad_raster_time
 
 # Check TR delay time
 assert tr_delay > 0, "Such parameter configuration needs longer TR."
@@ -257,10 +261,10 @@ for d in range(nb0s):
         seq.add_block(gx_pre, gy_pre)
 
         for i in range(Nyeff):
-            seq.add_block(gx, adc)          # Read one line of k-space
-            if i is not Nyeff-1:
-                seq.add_block(gy)               # Phase blip
-            gx.amplitude = -gx.amplitude    # Reverse polarity of read gradient
+            seq.add_block(gx, adc)  # Read one line of k-space
+            if i is not Nyeff - 1:
+                seq.add_block(gy)  # Phase blip
+            gx.amplitude = -gx.amplitude  # Reverse polarity of read gradient
 
         seq.add_block(gx_crush, gz_crush)
 
@@ -269,7 +273,7 @@ for d in range(nb0s):
             seq.add_block(make_delay(tr_delay))
 
 """ DWI acquisition """
-for bv in range(1, nbvals+1):
+for bv in range(1, nbvals + 1):
     for d in range(ndirs):
         for s in range(n_slices):
             # Fat saturation
@@ -282,12 +286,15 @@ for bv in range(1, nbvals+1):
             seq.add_block(gz_reph)
 
             # Diffusion-weighting gradient d1
-            gdiffx_d1 = make_trapezoid(channel='x', system=system, amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 0],
-                                    duration=d1)
-            gdiffy_d1 = make_trapezoid(channel='y', system=system, amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 1],
-                                    duration=d1)
-            gdiffz_d1 = make_trapezoid(channel='z', system=system, amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 2],
-                                    duration=d1)
+            gdiffx_d1 = make_trapezoid(channel='x', system=system,
+                                       amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 0],
+                                       duration=d1)
+            gdiffy_d1 = make_trapezoid(channel='y', system=system,
+                                       amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 1],
+                                       duration=d1)
+            gdiffz_d1 = make_trapezoid(channel='z', system=system,
+                                       amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 2],
+                                       duration=d1)
 
             seq.add_block(gdiffx_d1, gdiffy_d1, gdiffz_d1)
 
@@ -298,21 +305,27 @@ for bv in range(1, nbvals+1):
             seq.add_block(gz_spoil_1)
 
             # Diffusion-weighting gradient d2
-            gdiffx_d2 = make_trapezoid(channel='x', system=system, amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 0],
-                                    duration=d2)
-            gdiffy_d2 = make_trapezoid(channel='y', system=system, amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 1],
-                                    duration=d2)
-            gdiffz_d2 = make_trapezoid(channel='z', system=system, amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 2],
-                                    duration=d2)
+            gdiffx_d2 = make_trapezoid(channel='x', system=system,
+                                       amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 0],
+                                       duration=d2)
+            gdiffy_d2 = make_trapezoid(channel='y', system=system,
+                                       amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 1],
+                                       duration=d2)
+            gdiffz_d2 = make_trapezoid(channel='z', system=system,
+                                       amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 2],
+                                       duration=d2)
 
             seq.add_block(gdiffx_d2, gdiffy_d2, gdiffz_d2)
 
             # Diffusion-weighting gradient d3
-            gdiffx_d3 = make_trapezoid(channel='x', system=system, amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 0],
+            gdiffx_d3 = make_trapezoid(channel='x', system=system,
+                                       amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 0],
                                        duration=d3)
-            gdiffy_d3 = make_trapezoid(channel='y', system=system, amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 1],
+            gdiffy_d3 = make_trapezoid(channel='y', system=system,
+                                       amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 1],
                                        duration=d3)
-            gdiffz_d3 = make_trapezoid(channel='z', system=system, amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 2],
+            gdiffz_d3 = make_trapezoid(channel='z', system=system,
+                                       amplitude=system.max_grad * gscl_max * gscl[bv] * gdir[d, 2],
                                        duration=d3)
 
             seq.add_block(gdiffx_d3, gdiffy_d3, gdiffz_d3)
@@ -324,11 +337,14 @@ for bv in range(1, nbvals+1):
             seq.add_block(gz_spoil_2)
 
             # Diffusion-weighting gradient d4
-            gdiffx_d4 = make_trapezoid(channel='x', system=system, amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 0],
+            gdiffx_d4 = make_trapezoid(channel='x', system=system,
+                                       amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 0],
                                        duration=d4)
-            gdiffy_d4 = make_trapezoid(channel='y', system=system, amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 1],
+            gdiffy_d4 = make_trapezoid(channel='y', system=system,
+                                       amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 1],
                                        duration=d4)
-            gdiffz_d4 = make_trapezoid(channel='z', system=system, amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 2],
+            gdiffz_d4 = make_trapezoid(channel='z', system=system,
+                                       amplitude=-system.max_grad * gscl_max * gscl[bv] * gdir[d, 2],
                                        duration=d4)
 
             seq.add_block(gdiffx_d4, gdiffy_d4, gdiffz_d4)
@@ -337,10 +353,10 @@ for bv in range(1, nbvals+1):
             seq.add_block(gx_pre, gy_pre)
 
             for i in range(Nyeff):
-                seq.add_block(gx, adc)          # Read one line of k-space
-                if i is not Nyeff-1:
-                    seq.add_block(gy)               # Phase blip
-                gx.amplitude = -gx.amplitude    # Reverse polarity of read gradient
+                seq.add_block(gx, adc)  # Read one line of k-space
+                if i is not Nyeff - 1:
+                    seq.add_block(gy)  # Phase blip
+                gx.amplitude = -gx.amplitude  # Reverse polarity of read gradient
 
             seq.add_block(gx_crush, gz_crush)
 
@@ -369,24 +385,11 @@ if waveplot:
 
 # Save the sequence
 if save_flag:
-    seqfname = "trse_dwi_" + str(n_slices) + "slices_" + str(bvalue) + "bvalues_" + str(ndirs) + "dirs_" + str(d4*1e3) + "d4_" + \
-        str(round(TE * 1e3, 2)) + "TE_" + str(round(TR * 1e3)) + "TR_" + str(
+    seqfname = "trse_dwi_" + str(n_slices) + "slices_" + str(bvalue) + "bvalues_" + str(ndirs) + "dirs_" + str(
+        d4 * 1e3) + "d4_" + \
+               str(round(TE * 1e3, 2)) + "TE_" + str(round(TR * 1e3)) + "TR_" + str(
         system.max_grad / system.gamma * 1e3) + "G_Max_" + \
                str(system.max_slew / system.gamma) + "SR_Max" + fatsat_str + pF_str
     os.mkdir("tests/" + seqfname)
     seq.write("tests/" + seqfname + "/" + seqfname + ".seq")
     print("Seq file saved --", seqfname)
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -5,7 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
-	PulseqDiffusion.jMRI_Publication_Functions
+	PulseqDiffusion.SNR_CNR_Study
 
 
 Submodules

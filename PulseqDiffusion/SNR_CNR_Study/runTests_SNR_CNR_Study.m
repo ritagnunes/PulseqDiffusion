@@ -4,13 +4,13 @@
 % T.T. Fernandes, September 2019
 % LarSys - Instituto Superior Tecnico - Universidade de Lisboa
 %
-% name: jMRI_Publication_Functions_UnitTest
+% name: runTests_SNR_CNR_Study
 % type: Script
 % description:
 % It runs all unit test for every function on this folder.
 
 %% Initialize
-addpath(genpath('./jMRI_Publication_Functions'));
+addpath(genpath('./SNR_CNR_Study'));
 
 clear all; clc; close all
 

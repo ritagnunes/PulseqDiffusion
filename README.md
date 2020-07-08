@@ -12,10 +12,10 @@ We propose the development of a tool `PulseqDiffusion` cross-vendor, open-source
 
 The images can then be processed utilizing freely available post-processing tools for generating quantitative diffusion maps. Example code using the image analysis software FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki) [[5]](#references) is included in this package.
 
-A tool for predicting the signal-to-noise ratio (SNR) observed for different brain tissues (gray matter, white matter, cerebrospinal fluid - CSF) and the contrast-to-noise ratio (CNR) of an acute stroke lesion relative to those tissues can be found in `jMRI_Publication_Functions`. The implemented code predicts the SNR and CNR per time unit for a spin-echo diffusion-weighted sequence, taking into account the steady-state value for the longitudinal magnetization. For that purpose, we adapted an expression used to predict the SNR per tissue per time unit for a spoiled gradient echo sequence [[6]](#references). This simulation considers the possibility to use either EPI or spiral readouts and considers the impact of: B0, max gradient amplitude, spatial resolution and b-value (comparing the achieved SNR with that of a typical 1.5T clinical scanner).
+A tool for predicting the signal-to-noise ratio (SNR) observed for different brain tissues (gray matter, white matter, cerebrospinal fluid - CSF) and the contrast-to-noise ratio (CNR) of an acute stroke lesion relative to those tissues can be found in `SNR_CNR_Study`. The implemented code predicts the SNR and CNR per time unit for a spin-echo diffusion-weighted sequence, taking into account the steady-state value for the longitudinal magnetization. For that purpose, we adapted an expression used to predict the SNR per tissue per time unit for a spoiled gradient echo sequence [[6]](#references). This simulation considers the possibility to use either EPI or spiral readouts and considers the impact of: B0, max gradient amplitude, spatial resolution and b-value (comparing the achieved SNR with that of a typical 1.5T clinical scanner).
 
 ## Installation and Dependencies
-For sequence optimization depending on available hardware (`jMRI_Publication_Functions`): Matlab (www.mathworks.com)
+For sequence optimization depending on available hardware (`SNR_CNR_Study`): Matlab (www.mathworks.com)
 
 For sequence development: PyPulseq [[2]](#references) \>=Python 3.6, virtual environment recommended:
 ```pip install pypulseq```

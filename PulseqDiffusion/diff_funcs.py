@@ -270,8 +270,8 @@ def opt_TE_bv_SE(bvalue_Dict, grads_times_Dict, seq_sys_Dict):
         n_delay_te2 = n_tINV - n_rf180r - n_duration_center
 
     # Find minimum TE for the target b-value
-    bvalue_tmp = 0
-    while bvalue_tmp < np.max(bvalue):
+    bval = 0
+    while bval < np.max(bvalue):
         n_TE = n_TE + 2
 
         n_tINV = math.floor(n_TE / 2)

@@ -32,7 +32,6 @@
 %      in (T/m) ) and with different spatial resolution (between [2:0.5:6] 
 %      in (mm) ).
 %
-% =========================================================================
 
 %% Add path
 

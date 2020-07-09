@@ -59,7 +59,7 @@ if __name__ == '__main__':
     n_slices = 5
 
     # Partial Fourier
-    pF = 1
+    pF = 0.75
     Nyeff = int(pF * Ny)  # Number of Ny samples acquired
     if pF is not 1:
         pF_str = "_" + str(pF) + "pF"
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     n_TR = math.ceil(TR * i_raster_time)
 
     # Save seq
-    save_flag = False
+    save_flag = True
 
     # Fat saturation
     fatsat_enable = 0
@@ -209,7 +209,7 @@ if __name__ == '__main__':
                    "nbvals": nbvals,
                    "gscl": gscl}
 
-    # Optimie TE for the desired b-value
+    # Optimize TE for the desired b-value
     n_TE, bval, gdiff, n_delay_te1, n_delay_te2 = difunc.opt_TE_bv_SE(bvalue_Dict, grads_times_Dict, seq_sys_Dict)
 
     delay_te2 = n_delay_te2 / i_raster_time
@@ -398,7 +398,6 @@ if __name__ == '__main__':
         seqfname = "se_dwi_rs_" + str(n_slices) + "slices_" + str(bvalue) + "bvalues_" + str(ndirs) + "dirs_" + str(
             round(TE * 1e3, 2)) + "TE_" + str(round(TR * 1e3)) + "TR_" + str(
             system.max_grad / system.gamma * 1e3) + "G_Max_" + \
-                   str(system.max_slew / system.gamma) + "SR_Max" + fatsat_str + pF_str
-        os.mkdir("tests/" + seqfname)
-        seq.write("tests/" + seqfname + "/" + seqfname + ".seq")
+                   str(system.max_slew / system.gamma) + "SR_Max" + fatsat_str + pF_str + ".seq"
+        seq.write(seqfname)
         print("Seq file saved --", seqfname)

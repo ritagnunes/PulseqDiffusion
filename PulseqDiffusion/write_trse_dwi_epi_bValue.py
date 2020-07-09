@@ -396,7 +396,5 @@ if __name__ == '__main__':
             d4 * 1e3) + "d4_" + \
                    str(round(TE * 1e3, 2)) + "TE_" + str(round(TR * 1e3)) + "TR_" + str(
             system.max_grad / system.gamma * 1e3) + "G_Max_" + \
-                   str(system.max_slew / system.gamma) + "SR_Max" + fatsat_str + pF_str
-        os.mkdir("tests/" + seqfname)
-        seq.write("tests/" + seqfname + "/" + seqfname + ".seq")
+                   str(system.max_slew / system.gamma) + "SR_Max" + fatsat_str + pF_str + ".seq"
         print("Seq file saved --", seqfname)

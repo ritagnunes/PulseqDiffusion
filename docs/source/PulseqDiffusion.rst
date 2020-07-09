@@ -5,8 +5,9 @@ Subpackages
 -----------
 
 .. toctree::
-	PulseqDiffusion.SNR_CNR_Study
+   :maxdepth: 4
 
+   PulseqDiffusion.test
 
 Submodules
 ----------
@@ -19,45 +20,35 @@ PulseqDiffusion.diff\_funcs module
    :undoc-members:
    :show-inheritance:
 
-PulseqDiffusion.estimate\_adc function
---------------------------------------
-
-.. mat:automodule:: PulseqDiffusion
-.. mat:autofunction:: estimate_adc
-
-PulseqDiffusion.generate\_bvalsbvecs function
----------------------------------------------
-.. mat:autofunction:: generate_bvalsbvecs
-
-PulseqDiffusion.generate\_eddyfiles function
---------------------------------------------
-.. mat:autofunction:: generate_eddyfiles
-
-
-PulseqDiffusion.process\_data script
-------------------------------------
-.. mat:autoscript:: process_data
-
-
-PulseqDiffusion.recon\_imgs function
-------------------------------------
-.. mat:autofunction:: recon_imgs
-
-
 PulseqDiffusion.write\_se\_dwi\_epi\_bValue module
 --------------------------------------------------
 
-.. automodule:: PulseqDiffusion.write_se_dwi_epi_bValue   
+.. automodule:: PulseqDiffusion.write_se_dwi_epi_bValue
+   :members:
+   :undoc-members:
    :show-inheritance:
 
 PulseqDiffusion.write\_se\_dwi\_rsepi\_bValue module
 ----------------------------------------------------
 
-.. automodule:: PulseqDiffusion.write_se_dwi_rsepi_bValue 
+.. automodule:: PulseqDiffusion.write_se_dwi_rsepi_bValue
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 PulseqDiffusion.write\_trse\_dwi\_epi\_bValue module
 ----------------------------------------------------
 
 .. automodule:: PulseqDiffusion.write_trse_dwi_epi_bValue
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 
+Module contents
+---------------
+
+.. automodule:: PulseqDiffusion
+   :members:
+   :undoc-members:
+   :show-inheritance:

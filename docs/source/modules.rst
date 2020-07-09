@@ -2,7 +2,7 @@ PulseqDiffusion
 ===============
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 4
 
    PulseqDiffusion
-
+   PulseqDiffusion.SNR_CNR_Study.rst

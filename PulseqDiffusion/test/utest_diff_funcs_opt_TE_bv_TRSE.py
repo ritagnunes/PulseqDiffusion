@@ -1,6 +1,7 @@
 import pickle
 import sys
 import unittest
+import numpy as np
 from pathlib import Path
 
 from pypulseq import opts
@@ -26,7 +27,7 @@ class TestOptTEbvTRSE(unittest.TestCase):
         self.assertAlmostEqual(result[0], result_tmp[0])
         self.assertAlmostEqual(result[1], result_tmp[1])
         self.assertTrue(self, all(result[2] == result_tmp[2]))
-        self.assertAlmostEqual(result[3:], result_tmp[3:])
+        np.testing.assert_almost_equal(result[3:], result_tmp[3:])
         print('------End test 1------')
 
     def test_optTEbvTRSE2(self):
@@ -38,7 +39,7 @@ class TestOptTEbvTRSE(unittest.TestCase):
         self.assertAlmostEqual(result[0], result_tmp[0])
         self.assertAlmostEqual(result[1], result_tmp[1])
         self.assertTrue(self, all(result[2] == result_tmp[2]))
-        self.assertAlmostEqual(result[3:], result_tmp[3:])
+        np.testing.assert_almost_equal(result[3:], result_tmp[3:])
         print('------End test 2------')
 
     def test_optTEbvTRSE3(self):
@@ -50,7 +51,7 @@ class TestOptTEbvTRSE(unittest.TestCase):
         self.assertAlmostEqual(result[0], result_tmp[0])
         self.assertAlmostEqual(result[1], result_tmp[1])
         self.assertTrue(self, all(result[2] == result_tmp[2]))
-        self.assertAlmostEqual(result[3:], result_tmp[3:])
+        np.testing.assert_almost_equal(result[3:], result_tmp[3:])
         print('------End test 3------')
 
 

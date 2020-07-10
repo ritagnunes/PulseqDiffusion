@@ -56,7 +56,7 @@ if __name__ == '__main__':
     Nx = 64
     Ny = 64
     slice_thickness = 2.5e-3  # [m]
-    n_slices = 5
+    n_slices = 1
 
     # Partial Fourier
     pF = 0.75
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
     # Plot sequence and k-space trajectory
     seqplot = 1
-    kplot = 1
+    kplot = 0
 
     # b-value parameters
     nbvals = np.shape(bvalue)[0]

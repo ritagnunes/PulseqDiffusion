@@ -18,7 +18,7 @@ sys.modules['opts'] = opts
 
 class TestOptTEbvSE(unittest.TestCase):
     def test_optTEbvSE1(self):
-        path = Path(__file__).parent.parent / 'utest_sample_data' / 'opt_TE_bv_SE1.pkl'
+        path = Path(__file__).parent / 'utest_sample_data' / 'opt_TE_bv_SE1.pkl'
         with open(path, 'rb') as f:
             bvalue_Dict, grads_times_Dict, seq_sys_Dict, result_tmp = pickle.load(f)
 
@@ -27,7 +27,7 @@ class TestOptTEbvSE(unittest.TestCase):
         print('------End test 1------')
 
     def test_optTEbvSE2(self):
-        path = Path(__file__).parent.parent / 'utest_sample_data' / 'opt_TE_bv_SE2.pkl'
+        path = Path(__file__).parent / 'utest_sample_data' / 'opt_TE_bv_SE2.pkl'
         with open(path, 'rb') as f:
             bvalue_Dict, grads_times_Dict, seq_sys_Dict, result_tmp = pickle.load(f)
 
@@ -36,7 +36,7 @@ class TestOptTEbvSE(unittest.TestCase):
         print('------End test 2------')
 
     def test_optTEbvSE3(self):
-        path = Path(__file__).parent.parent / 'utest_sample_data' / 'opt_TE_bv_SE3.pkl'
+        path = Path(__file__).parent/ 'utest_sample_data' / 'opt_TE_bv_SE3.pkl'
         with open(path, 'rb') as f:
             bvalue_Dict, grads_times_Dict, seq_sys_Dict, result_tmp = pickle.load(f)
 

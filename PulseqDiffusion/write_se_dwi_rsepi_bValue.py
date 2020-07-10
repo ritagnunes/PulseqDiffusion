@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     # Acquisition Parameters
     # FOV and resolution
-    fov = 240e-3  # [m]
+    fov = 200e-3  # [m]
     Nx = 64
     Ny = 64
     slice_thickness = 2.5e-3  # [m]
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         pF_str = ""
 
     # b-value
-    bvalue = np.array([500])  # [s/mm2]
+    bvalue = np.array([500, 200, 100])  # [s/mm2]
 
     # Spin-Echo parameters
     TR = 5000e-3  # [s]
@@ -85,7 +85,7 @@ if __name__ == '__main__':
         fatsat_str = ""
 
     # Plot sequence and k-space trajectory
-    seqplot = 0
+    seqplot = 1
     kplot = 1
 
     # b-value parameters
@@ -168,7 +168,6 @@ if __name__ == '__main__':
     # Split Gy to put half on each consecutive Gx and produce a combined synthetic gradient
     gy_parts = split_gradient_at(grad=gy, time_point=dur / 2, system=system)
     gy_blipup, gy_blipdown, _ = align('right', gy_parts[0], 'left', gy_parts[1], gx)
-    gy_blipup.delay = math.ceil(gy_blipup.delay / system.grad_raster_time - 1) / i_raster_time
     gy_blipdownup = add_gradients([gy_blipdown, gy_blipup], system=system)
     assert math.ceil(calc_duration(gy_blipdownup) / system.grad_raster_time) == math.ceil(
         calc_duration(gy_blipup) / system.grad_raster_time), \

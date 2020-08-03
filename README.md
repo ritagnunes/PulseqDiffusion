@@ -2,7 +2,7 @@
 <img src="Logo.png"/>
 </p>
 
-<img title="PyPulseq Badge" src="https://github.com/imr-framework/pypulseq" width="100">
+<img title="PyPulseq Badge" src="https://img.shields.io/badge/made%20using-pypulseq-brightgreen" width="100">(https://github.com/imr-framework/pypulseq)
 
 # PulseqDiffusion:  Diffusion-Weighted Echo Planar Imaging sequence using the Open Source PyPulseq
 

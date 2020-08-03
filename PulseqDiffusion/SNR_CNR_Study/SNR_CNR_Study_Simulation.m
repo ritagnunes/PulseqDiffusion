@@ -12,7 +12,7 @@
 % fluid - CSF) and the contrast-to-noise ratio (CNR) of an acute stroke
 % lesion relative to those tissues. The implemented code predicts the 
 % SNR and CNR per time unit for a spin-echo diffusion-weighted sequence, 
-% taking into account the steady-state value for the longitudinal
+% taking into account the steady-state value for the transverse
 % magnetization. For that purpose, we adapted an expression used to
 % predict the SNR per tissue per time unit for a spoiled gradient echo
 % sequence (Marques, JP et al, 2019). This simulation considers the possibility to use either
@@ -164,22 +164,22 @@ OptimumAlpha_LS_B0ref = Ernstangle_d(TR_B0ref,T1_LS(refB0idx));
 
 % References values for each tissue (GM, WM, LS) and its respective SNR
 % ... GM tissue ...
-LongSSs_GM_B0ref = LongSS_Signal(OptimumAlpha_GM_B0ref,TR_B0ref,TE_B0ref,T1_GM(refB0idx),T2s_GM(refB0idx));
-DWs_GM_B0ref  = DWSignal(b,D_GM);
-S_GM_B0ref    = LongSSs_GM_B0ref * DWs_GM_B0ref;
-SNR_GM_ref    = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_GM_B0ref * (resNEW(refRes)/resINI)^3;
+TransvSSs_GM_B0ref = TransvSS_Signal(OptimumAlpha_GM_B0ref,TR_B0ref,TE_B0ref,T1_GM(refB0idx),T2s_GM(refB0idx));
+DWs_GM_B0ref       = DWSignal(b,D_GM);
+S_GM_B0ref         = TransvSSs_GM_B0ref * DWs_GM_B0ref;
+SNR_GM_ref         = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_GM_B0ref * (resNEW(refRes)/resINI)^3;
 
 % ... WM tissue ...
-LongSSs_WM_B0ref = LongSS_Signal(OptimumAlpha_WM_B0ref,TR_B0ref,TE_B0ref,T1_WM(refB0idx),T2s_WM(refB0idx));
-DWs_WM_B0ref  = DWSignal(b,D_WM);
-S_WM_B0ref    = LongSSs_WM_B0ref * DWs_WM_B0ref;
-SNR_WM_ref    = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_WM_B0ref * (resNEW(refRes)/resINI)^3;
+TransvSSs_WM_B0ref = TransvSS_Signal(OptimumAlpha_WM_B0ref,TR_B0ref,TE_B0ref,T1_WM(refB0idx),T2s_WM(refB0idx));
+DWs_WM_B0ref       = DWSignal(b,D_WM);
+S_WM_B0ref         = TransvSSs_WM_B0ref * DWs_WM_B0ref;
+SNR_WM_ref         = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_WM_B0ref * (resNEW(refRes)/resINI)^3;
 
 % ... LS tissue ...
-LongSSs_LS_B0ref = LongSS_Signal(OptimumAlpha_LS_B0ref,TR_B0ref,TE_B0ref,T1_LS(refB0idx),T2s_LS(refB0idx));
-DWs_LS_B0ref  = DWSignal(b,D_LS);
-S_LS_B0ref    = LongSSs_LS_B0ref * DWs_LS_B0ref;
-SNR_LS_ref    = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_LS_B0ref * (resNEW(refRes)/resINI)^3;
+TransvSSs_LS_B0ref = TransvSS_Signal(OptimumAlpha_LS_B0ref,TR_B0ref,TE_B0ref,T1_LS(refB0idx),T2s_LS(refB0idx));
+DWs_LS_B0ref       = DWSignal(b,D_LS);
+S_LS_B0ref         = TransvSSs_LS_B0ref * DWs_LS_B0ref;
+SNR_LS_ref         = SNR_B0ref * 1/sqrt(TR_B0ref) * 1/sqrt(BW_B0ref) * S_LS_B0ref * (resNEW(refRes)/resINI)^3;
 
 
 %% 4 - variation of SNR for B0, gm, Nslices, res, b_value ...
@@ -221,12 +221,12 @@ for bb = 1:size(B0,2)
             BW{bval,r}           = 1 ./ TRo{bval,r};
             
             % ... part 3 - Contribution of noise due to Signal Sequence (GM, WM & Lesion) ...
-            LongSS_GM_SNRinit{bb,bval,r} = LongSS_Signal(OptimumAlphaGM_SNRinit{bb,bval,r}, ...
-                                        TR{bval,r},TE{bval},T1_GM(bb),T2s_GM(bb));
-            LongSS_WM_SNRinit{bb,bval,r} = LongSS_Signal(OptimumAlphaWM_SNRinit{bb,bval,r}, ...
-                                        TR{bval,r},TE{bval},T1_WM(bb),T2s_WM(bb));
-            LongSS_LS_SNRinit{bb,bval,r} = LongSS_Signal(OptimumAlphaLS_SNRinit{bb,bval,r}, ...
-                                        TR{bval,r},TE{bval},T1_LS(bb),T2s_LS(bb));
+            TransvSS_GM_SNRinit{bb,bval,r} = TransvSS_Signal(OptimumAlphaGM_SNRinit{bb,bval,r}, ...
+                                           TR{bval,r},TE{bval},T1_GM(bb),T2s_GM(bb));
+            TransvSS_WM_SNRinit{bb,bval,r} = TransvSS_Signal(OptimumAlphaWM_SNRinit{bb,bval,r}, ...
+                                           TR{bval,r},TE{bval},T1_WM(bb),T2s_WM(bb));
+            TransvSS_LS_SNRinit{bb,bval,r} = TransvSS_Signal(OptimumAlphaLS_SNRinit{bb,bval,r}, ...
+                                           TR{bval,r},TE{bval},T1_LS(bb),T2s_LS(bb));
             
             % ... part 4 - Contribution of noise due to Diffusion ...
             DWs_GM_SNRinit = DWSignal(b_vector(bval),D_GM);
@@ -234,9 +234,9 @@ for bb = 1:size(B0,2)
             DWs_LS_SNRinit = DWSignal(b_vector(bval),D_LS);
             
             % ... part 5 - Combining of signal and diffusion...
-            S_GM_SNRinit{bb,bval,r} = LongSS_GM_SNRinit{bb,bval,r} .* DWs_GM_SNRinit;
-            S_WM_SNRinit{bb,bval,r} = LongSS_WM_SNRinit{bb,bval,r} .* DWs_WM_SNRinit;
-            S_LS_SNRinit{bb,bval,r} = LongSS_LS_SNRinit{bb,bval,r} .* DWs_LS_SNRinit;
+            S_GM_SNRinit{bb,bval,r} = TransvSS_GM_SNRinit{bb,bval,r} .* DWs_GM_SNRinit;
+            S_WM_SNRinit{bb,bval,r} = TransvSS_WM_SNRinit{bb,bval,r} .* DWs_WM_SNRinit;
+            S_LS_SNRinit{bb,bval,r} = TransvSS_LS_SNRinit{bb,bval,r} .* DWs_LS_SNRinit;
             
             % ... part 5.5 - SNR for time unit & referenced to EPI clinical scanner ...
             if refScan == 1

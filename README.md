@@ -60,7 +60,7 @@ The [sphinx](https://www.sphinx-doc.org/) automatic documentation software can b
 [sphinxcontrib-matlabdomain](https://pypi.org/project/sphinxcontrib-matlabdomain/) can be installed by running: ```pip install sphinxcontrib-matlabdomain```
 
 ---
-## [Citations][scholar-citations]
+## Citations
 
 1. Schellinger, P. D., R. N. Bryan, L. R. Caplan, J. A. Detre, R. R. Edelman, C. Jaigobin, C. S. Kidwell et al. "Evidence-based guideline: the role of diffusion and perfusion MRI for the diagnosis of acute ischemic stroke: report of the Therapeutics and Technology Assessment Subcommittee of the AmericanAcademy of Neurology." Neurology 75, no. (2010): 177-185.
 2. Ravi, K., Geethanath, S., and John Thomas Vaughan Jr. PyPulseq: A Python Package for MRI Pulse Sequence Design. 10.21105/joss.01725

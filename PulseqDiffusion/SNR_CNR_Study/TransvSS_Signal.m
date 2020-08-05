@@ -1,7 +1,7 @@
 function [Transv_SS_Signal] = TransvSS_Signal(FlipAngle,TRep,TE,T1,T2)
 % Transverse Steady-State signal calculation given the flip angle in degrees
 % by T.T. Fernandes, September 2019 - LarSys - Instituto Superior Tecnico - Universidade de Lisboa
-% usage:SS_Signal = LongSS_Signal(FlipAngle,TRep,TE,T1,T2)
+% usage:SS_Signal = TransvSS_Signal(FlipAngle,TRep,TE,T1,T2)
 %
 % :parameters: FlipAngle: Flip angle in degrees
 % :parameters: TRep: Time of readout in s

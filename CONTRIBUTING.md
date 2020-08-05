@@ -10,9 +10,9 @@ changes to this document in a pull request.
 
 ## Code of Conduct
 This project and everyone participating in it is governed by the
-[`PulseqDiffusion` Code of Conduct](code_of_conduct).
+[`PulseqDiffusion` Code of Conduct][code_of_conduct].
 By participating, you are expected to uphold this code. Please report unacceptable behavior to
-[ritagnunes@tecnico.ulisboa.pt](email).
+[ritagnunes@tecnico.ulisboa.pt][email].
 
 ## Pull requests
 Follow the coding conventions laid out in the [Style Guide for Python Code](style_guide). Ensure source code is

@@ -21,11 +21,3 @@ ttt=load('../Example_Data/ADCPhantom3dirs5b3slices.mat');
 ADCpred=ttt.ADC;
 ADCact=estimate_adc(tt.im_sos, ones(size(tt.im_sos(:,:,:,1))), t.dim_struct, t.dim_struct.bmax);
 assertValue(ADCact,ADCpred)
-
-function assertValue(actVal,expVal)
-% Helper function to assert equality
-% Takes two images and compares them 
-
-tf = isequal(actVal,expVal);
-assert(tf, 'Recon images do not match!');
-end

@@ -127,13 +127,4 @@ Nb0spred=3;
 [bvals,bvecs,Nb0s] = generate_bvalsbvecs(1000, 60, 1, 1);
 assertWithAbsTol(bvals,bvalspred,'bvals does not match prediction');
 assertWithAbsTol(bvecs,bvecspred,'bvecs does not match prediction');
-assertWithAbsTol(Nb0s,Nb0spred,'Nb0s does not match prediction');
-
- function assertWithAbsTol(actVal,expVal,varargin)
-% Helper function to assert equality within an absolute tolerance.
-% Takes two values and an optional message and compares
-% them within an absolute tolerance of 1e-6.
-tol = 1e-6;
-tf = norm(actVal-expVal) <= tol;
-assert(tf, varargin{:});
-end      
+assertWithAbsTol(Nb0s,Nb0spred,'Nb0s does not match prediction');    

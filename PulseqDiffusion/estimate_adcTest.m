@@ -1,4 +1,4 @@
-open %% Test Example In Vivo data 12 directions, Nb 1, 20 slices
+%% Test Example In Vivo data 12 directions, Nb 1, 20 slices
 t=load('../Example_Data/kInVivo12dirs1b20slices.mat');
 tt=load('../Example_Data/ImgInVivo12dirs1b20slices.mat');
 ttt=load('../Example_Data/ADCInVivo12dirs1b20slices.mat');

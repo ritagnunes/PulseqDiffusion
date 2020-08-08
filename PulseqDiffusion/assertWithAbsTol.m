@@ -3,6 +3,8 @@ function assertWithAbsTol(actVal,expVal,varargin)
 % Takes two values and an optional message and compares
 % them within an absolute tolerance of 1e-6.
 tol = 1e-6;
-tf = norm(actVal-expVal) <= tol;
+N = numel(actVal);
+dif = reshape( abs(actVal - expVal),[N 1]);
+tf = sum(dif) <= tol;
 assert(tf, varargin{:});
 end  

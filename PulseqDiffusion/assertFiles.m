@@ -12,10 +12,14 @@ else
 end
  
 tol = 1e-6;
-tf = norm(index-indexpred) <= tol;
+
+df = index - indexpred;
+tf = sqrt(df(:)'*df(:)) <= tol;
 assert(tf, 'index values do not match prediction');
 
-tf = norm(acqp-acqpred) <= tol;
+df =acqp - acqpred;
+tf = sqrt(df(:)'*df(:)) <= tol;
+
 assert(tf, 'acqp values do not match prediction');
 
 delete('index','acqp')
